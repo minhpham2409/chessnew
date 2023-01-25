@@ -1,44 +1,39 @@
-import sys
 import pygame
+import pygame_gui
 
-#   --------------------    CONST   ------------------  #
+from config import *
 import util
 from GameState import GameState, Move
 
-WIDTH = HEIGHT = 512
-DIMENSION = 8
-SQ_SIZE = WIDTH / DIMENSION
-MAX_FPS = 15
-icon = pygame.image.load('assets/images/icon.jpg')
-colorBoard = [(255, 255, 255), (0, 102, 0), (255, 255, 0)]
-
-WIDTH_PANEL = 300
-HEIGHT_PANEL = 300
-
-WIDTH_WINDOW = WIDTH + WIDTH_PANEL
-HEIGHT_WINDOW = HEIGHT
-
-
-#   --------------------    CONST   ------------------  #
-
 
 class GameMain:
-    def __init__(self):
-        self.IMAGES = {}
+    def __init__(self, screen: pygame.Surface):
 
-        pygame.init()
+        self.screen = screen
+
+        self.IMAGES = {}
         self._loadImages()
         self._loadSound()
 
-        # Surface for entire screen
-        self.screen = pygame.display.set_mode((WIDTH_WINDOW, HEIGHT_WINDOW))
         # Surface for board game
         self.board_screen = pygame.Surface((WIDTH, HEIGHT))
         # Surface for game status and controller
         self.panel_screen = pygame.Surface((WIDTH_PANEL, HEIGHT))
+        #   ---------------------------------- GUI ----------------------------------   #
+        self.manager = pygame_gui.UIManager((WIDTH_PANEL, HEIGHT_PANEL))
 
-        pygame.display.set_caption("Cờ vua AI")
-        pygame.display.set_icon(icon)
+        self.text_box = pygame_gui.elements.UITextBox(
+            relative_rect=pygame.Rect((0, 0), (WIDTH_MOVE_BOX, HEIGHT_MOVE_BOX)),
+            html_text='Hello',
+            manager=self.manager,
+            )
+
+
+        # self.button1 = pygame_gui.elements.UIButton(relative_rect=pygame.Rect(0,HEIGHT_PANEL*7/8,WIDTH_PANEL/4,WIDTH_PANEL/4),
+        #                                             text='',
+        #                                             manager=self.manager)
+
+        #   ---------------------------------- GUI ----------------------------------   #
 
         self.gs = GameState()
         self.clock = pygame.time.Clock()
@@ -47,11 +42,14 @@ class GameMain:
         self.playerClicks = []
         self.moveMade = False
         self.validMoves = self.gs.getAllPossibleMoves()
-        util.turn_print(self.gs.turn)
         self.running = True
+        self.isYielding = False
 
     def mainLoop(self):
+        self.running = True
         while self.running:
+            self.time_delta = self.clock.tick(MAX_FPS) / 1000
+
             #   Handle event
             self._eventHandler()
 
@@ -64,7 +62,6 @@ class GameMain:
             #   Update screen
             self._drawScreen()
             pygame.display.update()
-            self.clock.tick(MAX_FPS)
 
     # Load images into memory
     def _loadImages(self):
@@ -118,25 +115,31 @@ class GameMain:
                 self.board_screen.blit(surface, (y * SQ_SIZE, x * SQ_SIZE))
 
     def _drawPanel(self):
-        self.panel_screen.fill(pygame.Color('white'))
+        self.manager.update(self.time_delta)
+        self.manager.draw_ui(self.panel_screen)
 
     def _eventHandler(self):
         for event in pygame.event.get():
             # Event occurs when click X button
             if event.type == pygame.QUIT:
-                running = False
-                sys.exit(1)
+                self.running = False
             # Event occurs when click into screen
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 self._clickHandler()
             # Event occurs when press into a key
             elif event.type == pygame.KEYDOWN:
+                # Press r to reset
+                if event.key == pygame.K_r:
+                    self._reset()
+
+                # Press g to yielding
+                if event.key == pygame.K_g:
+                    self._yielding()
 
                 # Press z to undo
                 if event.key == pygame.K_z:
                     self.gs.undoMove()
                     self.moveMade = True
-
                 # Press q to log game_status
                 if event.key == pygame.K_q:
                     util.logGameStatus(self.gs.capturedPieces)
@@ -148,39 +151,37 @@ class GameMain:
 
         # Check valid screen
         if x in range(8) and y in range(8):
-            print(f'I click at ({x},{y}). It is {self.gs.board[x][y]}')
 
             # case when first click is empty piece or another team
             # or first click same as second click
             if self.click == (x, y) or (not self.click and (
                     self.gs.board[x][y] == '--' or self.gs.board[x][y][0] != self.gs.turn)):
-                print('Reset click')
+                # print('Reset click')
                 self.click = ()
                 self.playerClicks = []
             else:
                 self.click = (x, y)
                 self.playerClicks.append(self.click)
+
             if len(self.playerClicks) == 2:
-                # Check click is in same team
-                if self.gs.board[self.playerClicks[0][0]][self.playerClicks[0][1]][0] == \
-                        self.gs.board[self.playerClicks[1][0]][self.playerClicks[1][1]][0]:
-                    print(" Check click is in same team")
-                    self.click = self.playerClicks[1]
-                    playerClicks = [self.click]
-                else:
-                    move = Move(self.playerClicks[0], self.playerClicks[1], self.gs.board)
-                    if move in self.validMoves:
-                        if move.capturedPiece == '--':
-                            pygame.mixer.Sound.play(self.sound_move)
-                        else:
-                            pygame.mixer.Sound.play(self.sound_capture)
-                        self.gs.makeMove(move)
-                        print(f'I have made a {move.getNotation()}')
-                        self.moveMade = True
-                        self.click = ()
-                        self.playerClicks = []
+                move = Move(self.playerClicks[0], self.playerClicks[1], self.gs.board)
+                if move in self.validMoves:
+                    if move.capturedPiece == '--':
+                        pygame.mixer.Sound.play(self.sound_move)
+                    else:
+                        pygame.mixer.Sound.play(self.sound_capture)
+                    self.gs.makeMove(move)
+                    print(f'I have made a {move.getNotation()}')
+                    self.moveMade = True
 
+                self.click = ()
+                self.playerClicks = []
 
-if __name__ == "__main__":
-    gameMain = GameMain()
-    gameMain.mainLoop()
+    def _reset(self):
+        self.__init__(self.screen)
+        print("Reset game")
+
+    def _yielding(self):
+        self.running = False
+        self.isYielding = True
+        print("yielding")

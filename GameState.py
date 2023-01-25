@@ -16,6 +16,8 @@ class GameState:
         self.rival = {'b': 'w', 'w': 'b'}
         self.capturedPieces = {'wp': 0, 'wR': 0, 'wN': 0, 'wB': 0, 'wK': 0,
                                'wQ': 0, 'bp': 0, 'bR': 0, 'bN': 0, 'bB': 0, 'bK': 0, 'bQ': 0}
+        self.trans = {'w': "White",
+                      'b': "Black"}
 
         self.board = [
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
@@ -36,6 +38,12 @@ class GameState:
 
         self.board[move.sqEnd[0]][move.sqEnd[1]] = self.board[move.sqStart[0]][move.sqStart[1]]
         self.board[move.sqStart[0]][move.sqStart[1]] = '--'
+
+        # If occurs pawn promotion
+        if move.movePiece[1] == 'p' and move.sqEnd[0] in (0, 7):
+            self.pawnPromotion(move)
+            print(f"** Team {self.trans[self.turn]} has pawn promotion")
+
         self.turn = self.rival[self.turn]
         self.moveLog.append(move)
 
@@ -47,7 +55,6 @@ class GameState:
             self.turn = self.rival[self.turn]
 
     def getAllPossibleMoves(self):
-
         pawnMoves = []
         knightMoves = []
         rookMoves = []
@@ -61,19 +68,19 @@ class GameState:
                     # Check type of piece
                     piece = self.board[i][j][1]
                     if piece == 'p':
-                        pawnMoves.extend(self.getPawnMoves(i, j))
+                        pawnMoves.extend(self._getPawnMoves(i, j))
                     elif piece == 'N':
-                        knightMoves.extend(self.getKnightMoves(i, j))
+                        knightMoves.extend(self._getKnightMoves(i, j))
                     elif piece == 'R':
-                        rookMoves.extend(self.getRookMoves(i, j))
+                        rookMoves.extend(self._getRookMoves(i, j))
                     elif piece == 'B':
-                        bishopMoves.extend(self.getBishopMoves(i, j))
+                        bishopMoves.extend(self._getBishopMoves(i, j))
                     elif piece == 'Q':
-                        queenMoves.extend(self.getQueenMoves(i, j))
+                        queenMoves.extend(self._getQueenMoves(i, j))
                     else:
-                        kingMoves.extend(self.getKingMoves(i,j))
+                        kingMoves.extend(self._getKingMoves(i, j))
 
-        moves = list(itertools.chain(pawnMoves, knightMoves, rookMoves, bishopMoves, queenMoves,kingMoves))
+        moves = list(itertools.chain(pawnMoves, knightMoves, rookMoves, bishopMoves, queenMoves, kingMoves))
         # print("----------------------Move Pawn-----------------")
         # util.move_print(pawnMoves)
         # print("----------------------Move Pawn-----------------")
@@ -96,36 +103,35 @@ class GameState:
         util.getNumberOfMoves(moves)
         return moves
 
-    def getPawnMoves(self, r, c):
+    def _getPawnMoves(self, r, c):
         moves = []
 
         # Check special move
         if (self.turn == 'b' and r == 1) or (self.turn == 'w' and r == 6):
             des = (r + self.vP[self.turn][0][0], c)
-            if self.board[des[0]][des[1]] == '--':
+            if self._checkValidRowCol(des) and self.board[des[0]][des[1]] == '--':
                 moves.append(Move((r, c), des, self.board))
 
         des = (r + self.vP[self.turn][1][0], c)
-        if self.board[des[0]][des[1]] == '--':
+        if self._checkValidRowCol(des) and self.board[des[0]][des[1]] == '--':
             moves.append(Move((r, c), des, self.board))
 
         # Check attack move
 
         des = (r + self.vP[self.turn][2][0], c + self.vP[self.turn][2][1])
-        if self._checkValidRowCol(des):
-            # Check des is a rival
-            if self.board[des[0]][des[1]][0] == self.rival[self.turn]:
-                moves.append(Move((r, c), des, self.board))
+        if self._checkValidRowCol(des) and self.board[des[0]][des[1]][0] == self.rival[self.turn]:
+            moves.append(Move((r, c), des, self.board))
 
         des = (r + self.vP[self.turn][3][0], c + self.vP[self.turn][3][1])
         # Check des is a rival
-        if self._checkValidRowCol(des):
-            # Check des is a rival
-            if self.board[des[0]][des[1]][0] == self.rival[self.turn]:
-                moves.append(Move((r, c), des, self.board))
+        if self._checkValidRowCol(des) and self.board[des[0]][des[1]][0] == self.rival[self.turn]:
+            moves.append(Move((r, c), des, self.board))
+
+        # If occurs pawn en passant
+
         return moves
 
-    def getKnightMoves(self, r, c):
+    def _getKnightMoves(self, r, c):
         moves = []
         start = (r, c)
         # can attack
@@ -135,38 +141,52 @@ class GameState:
                 moves.append(Move(start, end, self.board))
         return moves
 
-    def getRookMoves(self, r, c):
+    def _getRookMoves(self, r, c):
         moves = []
         start = (r, c)
         for i in range(4):
             j = 1
             while True:
                 end = (r + j * self.vR[i][0], c + j * self.vR[i][1])
-                if self._checkValidRowCol(end) and self._checkCollision(start, end):
-                    moves.append(Move(start, end, self.board))
-                    j += 1
+                if self._checkValidRowCol(end):
+                    typeCollision = self._checkCollision(start, end)
+                    if typeCollision == 2:
+                        moves.append(Move(start, end, self.board))
+                        j += 1
+                    elif typeCollision == 1:
+                        moves.append(Move(start, end, self.board))
+                        break
+                    else:
+                        break
                 else:
                     break
         return moves
 
-    def getBishopMoves(self, r, c):
+    def _getBishopMoves(self, r, c):
         moves = []
         start = (r, c)
         for i in range(4):
             j = 1
             while True:
                 end = (r + j * self.vB[i][0], c + j * self.vB[i][1])
-                if self._checkValidRowCol(end) and self._checkCollision(start, end):
-                    moves.append(Move(start, end, self.board))
-                    j += 1
+                if self._checkValidRowCol(end):
+                    typeCollision = self._checkCollision(start, end)
+                    if typeCollision == 2:
+                        moves.append(Move(start, end, self.board))
+                        j += 1
+                    elif typeCollision == 1:
+                        moves.append(Move(start, end, self.board))
+                        break
+                    else:
+                        break
                 else:
                     break
         return moves
 
-    def getQueenMoves(self, r, c):
-        return self.getRookMoves(r, c) + self.getBishopMoves(r, c)
+    def _getQueenMoves(self, r, c):
+        return self._getRookMoves(r, c) + self._getBishopMoves(r, c)
 
-    def getKingMoves(self, r, c):
+    def _getKingMoves(self, r, c):
         moves = []
         start = (r, c)
 
@@ -191,9 +211,17 @@ class GameState:
         return False
 
     def _checkCollision(self, start, end):
+        # 0 represent collision with same team
+        # 1 represent collision with enemy
+        # 2 represent no collision
+        if self.board[end[0]][end[1]][0] == '-':
+            return 2
         if self.board[start[0]][start[1]][0] == self.board[end[0]][end[1]][0]:
-            return False
-        return True
+            return 0
+        return 1
+
+    def pawnPromotion(self, move):
+        self.board[move.sqEnd[0]][move.sqEnd[1]] = self.turn + 'Q'
 
 
 class Move:
