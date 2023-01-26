@@ -1,6 +1,8 @@
 import pygame
 import pygame_gui
 
+from time import strftime
+
 pygame.init()
 
 pygame.display.set_caption('Quick Start')
@@ -28,7 +30,7 @@ while is_running:
 
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == hello_button:
-                hello_button.set_text("11")
+                hello_button.set_text(clock.)
 
         manager.process_events(event)
 

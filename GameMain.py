@@ -24,7 +24,7 @@ class GameMain:
 
         self.text_box = pygame_gui.elements.UITextBox(
             relative_rect=pygame.Rect((0, 0), (WIDTH_MOVE_BOX, HEIGHT_MOVE_BOX)),
-            html_text='Hello',
+            html_text='',
             manager=self.manager,
             )
 
@@ -41,7 +41,7 @@ class GameMain:
         self.click = ()  # Represent location of square which is pushed by mouse
         self.playerClicks = []
         self.moveMade = False
-        self.validMoves = self.gs.getAllPossibleMoves()
+        self.validMoves = self.gs.getValidMoves()
         self.running = True
         self.isYielding = False
 
@@ -55,9 +55,10 @@ class GameMain:
 
             #  move update
             if self.moveMade:
+                s = self.gs.getMoveNotation()
+                self.text_box.set_text(html_text=s)
                 self.moveMade = False
-                self.validMoves = self.gs.getAllPossibleMoves()
-                util.turn_print(self.gs.turn)
+                self.validMoves = self.gs.getValidMoves()
 
             #   Update screen
             self._drawScreen()
@@ -144,6 +145,13 @@ class GameMain:
                 if event.key == pygame.K_q:
                     util.logGameStatus(self.gs.capturedPieces)
 
+                if event.key == pygame.K_l:
+                    kingMoves = self.gs.getValidMoves()
+
+                if event.key == pygame.K_u:
+                    util.printBoard(self.gs.board)
+
+
     def _clickHandler(self):
         pos = pygame.mouse.get_pos()
         x = int(pos[1] / SQ_SIZE)
@@ -171,7 +179,6 @@ class GameMain:
                     else:
                         pygame.mixer.Sound.play(self.sound_capture)
                     self.gs.makeMove(move)
-                    print(f'I have made a {move.getNotation()}')
                     self.moveMade = True
 
                 self.click = ()
