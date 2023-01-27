@@ -3,7 +3,7 @@ import pygame_gui
 
 from config import *
 import util
-from GameState import GameState, Move
+from GameState import GameState
 
 
 class GameMain:
@@ -26,8 +26,7 @@ class GameMain:
             relative_rect=pygame.Rect((0, 0), (WIDTH_MOVE_BOX, HEIGHT_MOVE_BOX)),
             html_text='',
             manager=self.manager,
-            )
-
+        )
 
         # self.button1 = pygame_gui.elements.UIButton(relative_rect=pygame.Rect(0,HEIGHT_PANEL*7/8,WIDTH_PANEL/4,WIDTH_PANEL/4),
         #                                             text='',
@@ -141,17 +140,18 @@ class GameMain:
                 if event.key == pygame.K_z:
                     self.gs.undoMove()
                     self.moveMade = True
-                # Press q to log game_status
-                if event.key == pygame.K_q:
-                    util.logGameStatus(self.gs.capturedPieces)
-
-                if event.key == pygame.K_l:
-                    kingMoves = self.gs.getValidMoves()
 
                 if event.key == pygame.K_u:
-                    util.printBoard(self.gs.board)
+                    i = 1
+                    for c in self.gs.castle_rights_log:
+                        print(i ,c.wqs, c.wks, c.bqs, c.bks,c, sep='::')
+                        i += 1
 
-
+                if event.key == pygame.K_k:
+                    print(self.gs.current_castling_rights.wks)
+                    print(self.gs.current_castling_rights.wqs)
+                    print(self.gs.current_castling_rights.bks)
+                    print(self.gs.current_castling_rights.bqs)
     def _clickHandler(self):
         pos = pygame.mouse.get_pos()
         x = int(pos[1] / SQ_SIZE)
@@ -172,14 +172,17 @@ class GameMain:
                 self.playerClicks.append(self.click)
 
             if len(self.playerClicks) == 2:
-                move = Move(self.playerClicks[0], self.playerClicks[1], self.gs.board)
-                if move in self.validMoves:
-                    if move.capturedPiece == '--':
-                        pygame.mixer.Sound.play(self.sound_move)
-                    else:
-                        pygame.mixer.Sound.play(self.sound_capture)
-                    self.gs.makeMove(move)
-                    self.moveMade = True
+                id_click = 1000 * self.playerClicks[0][0] + 100 * self.playerClicks[0][1] + 10 * self.playerClicks[1][
+                    0] + self.playerClicks[1][1]
+                for move in self.validMoves:
+                    if move.moveID == id_click:
+                        if move.capturedPiece == '--':
+                            pygame.mixer.Sound.play(self.sound_move)
+                        else:
+                            pygame.mixer.Sound.play(self.sound_capture)
+                        self.gs.makeMove(move)
+                        self.moveMade = True
+                        break
 
                 self.click = ()
                 self.playerClicks = []
