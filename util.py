@@ -1,8 +1,3 @@
-def move_print(moves):
-    for i in range(len(moves)):
-        print(moves[i].getNotation(), sep=",")
-
-
 def move_print_detail(move):
 
     print("is Enpassant: ", move.isEnpassant)
@@ -40,6 +35,12 @@ def printBoard(board):
         print('')
     print(']')
 
+
+def print_squares(squares):
+    print("Print Square")
+    for square in squares:
+        print(f'({square[0]},{square[1]})',end="     ")
+    print("")
 
 def printPinAndCheck(pins, checks):
     if len(checks) == 0:

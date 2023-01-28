@@ -12,8 +12,8 @@ class GameMain:
         self.screen = screen
 
         self.IMAGES = {}
-        self._loadImages()
-        self._loadSound()
+        self.__loadImages()
+        self.__loadSound()
 
         # Surface for board game
         self.board_screen = pygame.Surface((WIDTH, HEIGHT))
@@ -42,7 +42,6 @@ class GameMain:
         self.moveMade = False
         self.validMoves = self.gs.getValidMoves()
         self.running = True
-        self.isYielding = False
 
     def mainLoop(self):
         self.running = True
@@ -50,7 +49,7 @@ class GameMain:
             self.time_delta = self.clock.tick(MAX_FPS) / 1000
 
             #   Handle event
-            self._eventHandler()
+            self.eventHandler()
 
             #  move update
             if self.moveMade:
@@ -60,11 +59,11 @@ class GameMain:
                 self.validMoves = self.gs.getValidMoves()
 
             #   Update screen
-            self._drawScreen()
+            self.drawScreen()
             pygame.display.update()
 
     # Load images into memory
-    def _loadImages(self):
+    def __loadImages(self):
         pieces = ['wp', 'wR', 'wN', 'wB', 'wK',
                   'wQ', 'bp', 'bR', 'bN', 'bB', 'bK', 'bQ']
         for piece in pieces:
@@ -72,19 +71,19 @@ class GameMain:
                                                         (SQ_SIZE, SQ_SIZE))
 
     # Load sound into memory
-    def _loadSound(self):
+    def __loadSound(self):
         self.sound_move = pygame.mixer.Sound('./assets/sound/move.wav')
         self.sound_capture = pygame.mixer.Sound('./assets/sound/capture.wav')
 
-    def _drawScreen(self):
-        self._drawBoard()
-        self._drawPiece()
-        self._highlightSquares()
-        self._drawPanel()
+    def drawScreen(self):
+        self.drawBoard()
+        self.drawPiece()
+        self.highlightSquares()
+        self.drawPanel()
         self.screen.blit(self.board_screen, (0, 0))
         self.screen.blit(self.panel_screen, (WIDTH, 0))
 
-    def _drawBoard(self):
+    def drawBoard(self):
         for i in range(DIMENSION):
             for j in range(DIMENSION):
                 color = colorBoard[(i + j) % 2]
@@ -92,14 +91,14 @@ class GameMain:
                 y = j * SQ_SIZE
                 pygame.draw.rect(self.board_screen, color, pygame.Rect(x, y, SQ_SIZE, SQ_SIZE))
 
-    def _drawPiece(self):
+    def drawPiece(self):
         for i in range(DIMENSION):
             for j in range(DIMENSION):
                 piece = self.gs.board[i][j]
                 if piece != "--":
                     self.board_screen.blit(self.IMAGES[piece], pygame.Rect(j * SQ_SIZE, i * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
-    def _highlightSquares(self):
+    def highlightSquares(self):
         sqHighlight = []
 
         if self.click:
@@ -114,27 +113,23 @@ class GameMain:
                 surface.fill(colorBoard[2])
                 self.board_screen.blit(surface, (y * SQ_SIZE, x * SQ_SIZE))
 
-    def _drawPanel(self):
+    def drawPanel(self):
         self.manager.update(self.time_delta)
         self.manager.draw_ui(self.panel_screen)
 
-    def _eventHandler(self):
+    def eventHandler(self):
         for event in pygame.event.get():
             # Event occurs when click X button
             if event.type == pygame.QUIT:
                 self.running = False
             # Event occurs when click into screen
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                self._clickHandler()
+                self.clickHandler()
             # Event occurs when press into a key
             elif event.type == pygame.KEYDOWN:
                 # Press r to reset
                 if event.key == pygame.K_r:
-                    self._reset()
-
-                # Press g to yielding
-                if event.key == pygame.K_g:
-                    self._yielding()
+                    self.reset()
 
                 # Press z to undo
                 if event.key == pygame.K_z:
@@ -144,15 +139,14 @@ class GameMain:
                 if event.key == pygame.K_u:
                     i = 1
                     for c in self.gs.castle_rights_log:
-                        print(i ,c.wqs, c.wks, c.bqs, c.bks,c, sep='::')
+                        print(i, c.wqs, c.wks, c.bqs, c.bks, c, sep='::')
                         i += 1
 
                 if event.key == pygame.K_k:
-                    print(self.gs.current_castling_rights.wks)
-                    print(self.gs.current_castling_rights.wqs)
-                    print(self.gs.current_castling_rights.bks)
-                    print(self.gs.current_castling_rights.bqs)
-    def _clickHandler(self):
+                    c = self.gs.current_castling_rights
+                    print("current: ", c.wqs, c.wks, c.bqs, c.bks, c, sep='::')
+
+    def clickHandler(self):
         pos = pygame.mouse.get_pos()
         x = int(pos[1] / SQ_SIZE)
         y = int(pos[0] / SQ_SIZE)
@@ -187,11 +181,6 @@ class GameMain:
                 self.click = ()
                 self.playerClicks = []
 
-    def _reset(self):
+    def reset(self):
         self.__init__(self.screen)
         print("Reset game")
-
-    def _yielding(self):
-        self.running = False
-        self.isYielding = True
-        print("yielding")

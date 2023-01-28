@@ -2,6 +2,7 @@ from GameMain import GameMain
 import pygame
 
 from MenuScreen import MenuScreen
+from PlayMode import PlayMode
 from config import *
 
 
@@ -16,23 +17,26 @@ class GameController:
 
     def run(self):
         # Entry point for game
-        self._inMenuScreen()
+        self.__inMenuScreen()
 
-    def _inMenuScreen(self):
+    def __inMenuScreen(self):
         menuScreen = MenuScreen(self.screen)
 
         # Apply function handler for each button
-        menuScreen.menu.get_widget('PvP').set_onreturn(self._inPlayScreen)
-        # menuScreen.menu.get_widget('PvC').set_onreturn(self._inPlayScreen)
+        menuScreen.menu.get_widget('PvP').set_onreturn(self.__inPlayScreen)
+        menuScreen.menu.get_widget('PvC').set_onreturn(self.__inPlayAIScreen)
         print("i am in menu screen")
 
         # Start menu loop
         menuScreen.mainLoop()
         print("I am exiting menu")
 
-    def _inPlayScreen(self):
-        gameMain = GameMain(self.screen)
-        gameMain.mainLoop()
+    def __inPlayScreen(self):
+        playMode = PlayMode(self.screen)
+        playMode.mainLoop()
+
+    def __inPlayAIScreen(self):
+        pass
 
 
 if __name__ == "__main__":

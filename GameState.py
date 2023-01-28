@@ -3,6 +3,7 @@ import util
 
 class GameState:
     rival = {'b': 'w', 'w': 'b'}
+    trans = {'b': 'Black', 'w': "White"}
 
     def __init__(self):
         # Direction of each piece
@@ -26,12 +27,13 @@ class GameState:
         self.turn = 'w'
         self.moveLog = []
         self.kingLocation = {'w': (7, 4), 'b': (0, 4)}
+        self.inCheck = False
 
         self.enpassant_possible = ()
         self.enpassant_log = [()]
         # Format in ((x_pin,y_pin), (x_check,y_check), (dx,dy))
         self.pins = []
-        # Format in ((x,y), (dx,dy)). Example ((4,4),(1,1))
+        # Format in ((x,y), (dx,dy))
         self.checks = []
 
         self.current_castling_rights = CastleRights(True, True, True, True)
@@ -124,9 +126,9 @@ class GameState:
                     self.board[move.sqEnd[0]][move.sqEnd[1] - 2] = f'{self.turn}R'
 
     def getValidMoves(self):
+
         temp_castle_rights = CastleRights(self.current_castling_rights.wks, self.current_castling_rights.bks,
                                           self.current_castling_rights.wqs, self.current_castling_rights.bqs)
-
         moves = []
         king_moves = self._getKingValidMoves()
         moves.extend(king_moves)
@@ -135,23 +137,28 @@ class GameState:
         attacked_square = self._getAttackSquare(self.board)
 
         num_checkers = len(self.checks)
+        if num_checkers != 0:
+            self.inCheck = True
 
         if num_checkers == 0:
+            self.inCheck = False
             #   Get move of pin piece
             for pin in self.pins:
                 type_pin = self.board[pin[0][0]][pin[0][1]][1]
                 # Get square between check and king
-                dx = (pin[1][0] - self.kingLocation[self.turn][0])
-                dy = (pin[1][1] - self.kingLocation[self.turn][1])
+                dx = abs(pin[1][0] - self.kingLocation[self.turn][0])
+                dy = abs(pin[1][1] - self.kingLocation[self.turn][1])
                 if dx == dy:
                     d = dx
                 else:
                     d = dx + dy
                 square = []
+                print(d)
                 for i in range(1, d + 1):
                     square.append((self.kingLocation[self.turn][0] + i * pin[2][0],
                                    self.kingLocation[self.turn][1] + i * pin[2][1]))
-                moves_pin = self.getFunctionMove[type_pin](pin[0][0], pin[0][1])
+                util.print_squares(square)
+                moves_pin = self.getFunctionMove[type_pin](pin[0][0], pin[0][1], self.board)
                 for move in moves_pin:
                     if move.sqEnd in square:
                         moves.append(move)
@@ -165,7 +172,7 @@ class GameState:
                         # Check type of piece
                         piece = self.board[i][j][1]
                         if (i, j) not in pin_tmp and piece != 'K':
-                            moves.extend(self.getFunctionMove[piece](i, j))
+                            moves.extend(self.getFunctionMove[piece](i, j, self.board))
 
             # Get castle move
             self.getCastleMoves(moves, attacked_square)
@@ -194,8 +201,8 @@ class GameState:
 
                 # Get square between king and check
                 square = []
-                dx = (self.checks[0][0][0] - self.kingLocation[self.turn][0])
-                dy = (self.checks[0][0][1] - self.kingLocation[self.turn][1])
+                dx = abs(self.checks[0][0][0] - self.kingLocation[self.turn][0])
+                dy = abs(self.checks[0][0][1] - self.kingLocation[self.turn][1])
                 if dx == dy:
                     d = dx
                 else:
@@ -207,13 +214,6 @@ class GameState:
                     if move.sqEnd in square:
                         push_move.append(move)
 
-            print("push move:")
-            util.move_print(push_move)
-            print("Capture move:")
-            util.move_print(capture_moves)
-            print("King move: ")
-            util.move_print(king_moves)
-
             moves.extend(push_move)
             moves.extend(capture_moves)
         else:
@@ -221,7 +221,6 @@ class GameState:
 
         if not moves:
             print("Check mate")
-
         self.current_castling_rights = temp_castle_rights
 
         return moves
@@ -233,11 +232,10 @@ class GameState:
         kingMoves = []
 
         # Lấy các nước đi của vua
-        tmp = self._getKingMoves(self.kingLocation[self.turn][0], self.kingLocation[self.turn][1])
+        tmp = self._getKingMoves(self.kingLocation[self.turn][0], self.kingLocation[self.turn][1], self.board)
 
         # Lấy các ô có thể bị tấn công bởi đối thủ
         attack_square = self._getAttackSquare(boardCopy)
-
         # Kiểm tra nước đi của vua có hợp lệ hay không
         for move in tmp:
             if move.sqEnd not in attack_square:
@@ -253,7 +251,7 @@ class GameState:
                 if self.turn == boardCopy[i][j][0]:
                     # Check type of piece
                     piece = self.board[i][j][1]
-                    moves = self.getFunctionMove[piece](i, j, True)
+                    moves = self.getFunctionMove[piece](i, j, boardCopy, True)
                     for move in moves:
                         attackSquare.append(move.sqEnd)
 
@@ -308,49 +306,51 @@ class GameState:
                 # enemy knight attacking a king
                 if end_piece[0] == self.rival[self.turn] and end_piece[1] == "N":
                     checks.append((sqEnd, move))
+
+        util.printPinAndCheck(pins, checks)
         return pins, checks
 
-    def _getPawnMoves(self, r, c, attackAble=False):
+    def _getPawnMoves(self, r, c, board, attackAble=False):
         moves = []
         vP = {'b': [(2, 0), (1, 0), (1, 1), (1, -1)],
               'w': [(-2, 0), (-1, 0), (-1, 1), (-1, -1)]}
         if attackAble:
             des = (r + vP[self.turn][2][0], c + vP[self.turn][2][1])
             if self._checkValidRowCol(des):
-                moves.append(Move((r, c), des, self.board))
+                moves.append(Move((r, c), des, board))
 
             des = (r + vP[self.turn][3][0], c + vP[self.turn][3][1])
             if self._checkValidRowCol(des):
-                moves.append(Move((r, c), des, self.board))
+                moves.append(Move((r, c), des, board))
             return moves
 
-        # Check special move and detect en passant move
+        # Check special move and detect en passant movself.board
         if (self.turn == 'b' and r == 1) or (self.turn == 'w' and r == 6):
             des = (r + vP[self.turn][0][0], c)
-            if self._checkValidRowCol(des) and self.board[des[0]][des[1]] == '--':
-                moves.append(Move((r, c), des, self.board))
+            if self._checkValidRowCol(des) and board[des[0]][des[1]] == '--':
+                moves.append(Move((r, c), des, board))
 
         des = (r + vP[self.turn][1][0], c)
-        if self._checkValidRowCol(des) and self.board[des[0]][des[1]] == '--':
-            moves.append(Move((r, c), des, self.board))
+        if self._checkValidRowCol(des) and board[des[0]][des[1]] == '--':
+            moves.append(Move((r, c), des, board))
 
         # Check attack move and en passant attack
 
         des = (r + vP[self.turn][2][0], c + vP[self.turn][2][1])
-        if self._checkValidRowCol(des) and self.board[des[0]][des[1]][0] == self.rival[self.turn]:
-            moves.append(Move((r, c), des, self.board))
+        if self._checkValidRowCol(des) and board[des[0]][des[1]][0] == self.rival[self.turn]:
+            moves.append(Move((r, c), des, board))
         if des == self.enpassant_possible:
-            move = Move((r, c), des, self.board, enPassantSquare=self.enpassant_possible)
+            move = Move((r, c), des, board, enPassantSquare=self.enpassant_possible)
             print("-------------------Generator Move en passant --------------------")
             util.move_print_detail(move)
             print("-------------------Generator Move en passant --------------------")
             moves.append(move)
 
         des = (r + vP[self.turn][3][0], c + vP[self.turn][3][1])
-        if self._checkValidRowCol(des) and self.board[des[0]][des[1]][0] == self.rival[self.turn]:
-            moves.append(Move((r, c), des, self.board))
+        if self._checkValidRowCol(des) and board[des[0]][des[1]][0] == self.rival[self.turn]:
+            moves.append(Move((r, c), des, board))
         if des == self.enpassant_possible:
-            move = Move((r, c), des, self.board, enPassantSquare=self.enpassant_possible)
+            move = Move((r, c), des, board, enPassantSquare=self.enpassant_possible)
             moves.append(move)
             print("-------------------Generator Move en passant --------------------")
             util.move_print_detail(move)
@@ -358,7 +358,7 @@ class GameState:
 
         return moves
 
-    def _getKnightMoves(self, r, c, attackAble=False):
+    def _getKnightMoves(self, r, c, board, attackAble=False):
         moves = []
         vN = {'b': [(2, 1), (2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2), (-2, 1), (-2, -1)],
               'w': [(-2, -1), (-1, -2), (-2, 1), (-1, 2), (2, 1), (2, -1), (1, 2), (1, -2)]}
@@ -366,11 +366,11 @@ class GameState:
         # can attack
         for i in range(8):
             end = (r + vN[self.turn][i][0], c + vN[self.turn][i][1])
-            if self._checkValidRowCol(end) and (attackAble or self._checkCollision(start, end)):
-                moves.append(Move(start, end, self.board))
+            if self._checkValidRowCol(end) and (attackAble or self._checkCollision(start, end, board)):
+                moves.append(Move(start, end, board))
         return moves
 
-    def _getRookMoves(self, r, c, attackAble=False):
+    def _getRookMoves(self, r, c, board, attackAble=False):
         moves = []
         vR = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         start = (r, c)
@@ -379,12 +379,12 @@ class GameState:
             while True:
                 end = (r + j * vR[i][0], c + j * vR[i][1])
                 if self._checkValidRowCol(end):
-                    typeCollision = self._checkCollision(start, end)
+                    typeCollision = self._checkCollision(start, end, board)
                     if typeCollision == 2:
-                        moves.append(Move(start, end, self.board))
+                        moves.append(Move(start, end, board))
                         j += 1
                     elif typeCollision == 1 or (typeCollision == 0 and attackAble):
-                        moves.append(Move(start, end, self.board))
+                        moves.append(Move(start, end, board))
                         break
                     else:
                         break
@@ -392,7 +392,7 @@ class GameState:
                     break
         return moves
 
-    def _getBishopMoves(self, r, c, attackAble=False):
+    def _getBishopMoves(self, r, c, board, attackAble=False):
         moves = []
         vB = [(1, 1), (-1, -1), (-1, 1), (1, -1)]
         start = (r, c)
@@ -401,12 +401,12 @@ class GameState:
             while True:
                 end = (r + j * vB[i][0], c + j * vB[i][1])
                 if self._checkValidRowCol(end):
-                    typeCollision = self._checkCollision(start, end)
+                    typeCollision = self._checkCollision(start, end, board)
                     if typeCollision == 2:
-                        moves.append(Move(start, end, self.board))
+                        moves.append(Move(start, end, board))
                         j += 1
                     elif typeCollision == 1 or (typeCollision == 0 and attackAble):
-                        moves.append(Move(start, end, self.board))
+                        moves.append(Move(start, end, board))
                         break
                     else:
                         break
@@ -414,47 +414,20 @@ class GameState:
                     break
         return moves
 
-    def _getQueenMoves(self, r, c, attackAble=False):
-        return self._getRookMoves(r, c, attackAble) + self._getBishopMoves(r, c, attackAble)
+    def _getQueenMoves(self, r, c, board, attackAble=False):
+        return self._getRookMoves(r, c, board, attackAble) + self._getBishopMoves(r, c, board, attackAble)
 
-    def _getKingMoves(self, r, c, attackAble=False):
+    def _getKingMoves(self, r, c, board, attackAble=False):
         moves = []
         start = (r, c)
         vK = [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (-1, -1), (-1, 1), (1, -1)]
 
         for i in range(8):
             end = (r + vK[i][0], c + vK[i][1])
-            if self._checkValidRowCol(end) and (attackAble or self._checkCollision(start, end)):
-                moves.append(Move(start, end, self.board))
+            if self._checkValidRowCol(end) and (attackAble or self._checkCollision(start, end, board)):
+                moves.append(Move(start, end, board))
 
         return moves
-
-    @staticmethod
-    def _checkValidRowCol(p):
-        if p[0] in range(8) and p[1] in range(8):
-            return True
-        return False
-
-    def _checkCollision(self, start, end):
-        # 0 represent collision with same team
-        # 1 represent collision with enemy
-        # 2 represent no collision
-        if self.board[end[0]][end[1]][0] == '-':
-            return 2
-        if self.board[start[0]][start[1]][0] == self.board[end[0]][end[1]][0]:
-            return 0
-        return 1
-
-    def getMoveNotation(self):
-        s = ''
-        move_turn = 0
-        for move in self.moveLog:
-            if move_turn % 2 == 0:
-                s += f"\n{int(move_turn / 2 + 1)} "
-            s += move.getNotation() + ' '
-            move_turn += 1
-        s = s.removeprefix('\n')
-        return s
 
     def updateCastleRights(self, move):
         if move.capturedPiece == "wR":
@@ -524,6 +497,38 @@ class GameState:
             return True
         return False
 
+    @staticmethod
+    def _checkValidRowCol(p):
+        if p[0] in range(8) and p[1] in range(8):
+            return True
+        return False
+
+    @staticmethod
+    def _checkCollision(start, end, board):
+        # 0 represent collision with same team
+        # 1 represent collision with enemy
+        # 2 represent no collision
+        if board[end[0]][end[1]][0] == '-':
+            return 2
+        if board[start[0]][start[1]][0] == board[end[0]][end[1]][0]:
+            return 0
+        return 1
+
+    def getMoveNotation(self):
+        s = '{0:5}{1:10}{2:10}'.format("", "White", "Black")
+        move_turn = 0
+        for move in self.moveLog:
+            if move_turn % 2 == 0:
+                turn = f'{str(move_turn // 2 + 1)}.'
+                s += '\n{0:5}'.format(turn)
+            s += '{0:10}'.format(move.getChessNotation())
+            move_turn += 1
+        return s
+
+    def getTurn(self):
+        s = f"Turn: {self.trans[self.turn]}"
+        return s
+
 
 class Move:
     """
@@ -555,8 +560,35 @@ class Move:
             return self.moveID == other.moveID
         return False
 
-    def getNotation(self):
-        return f'{Move._fileMap[self.sqStart[1]]}{Move._rankMap[self.sqStart[0]]}-{Move._fileMap[self.sqEnd[1]]}{Move._rankMap[self.sqEnd[0]]} '
+    def getRankFile(self, r, c):
+        return self._fileMap[c] + str(self._rankMap[r])
+
+    def getChessNotation(self):
+
+        if self.isPawnPromotion:
+            return self.getRankFile(self.sqEnd[0], self.sqEnd[1]) + "Q"
+
+        if self.is_castle_move:
+            if self.sqEnd[1] == 1:
+                return "0-0-0"
+            else:
+                return "0-0"
+
+        if self.isEnpassant:
+            return self.getRankFile(self.sqStart[0], self.sqStart[1])[0] + "x" + self.getRankFile(self.sqEnd[0],
+                                                                                                  self.sqEnd[
+                                                                                                      1]) + " e.p."
+        if self.capturedPiece != "--":
+            if self.movePiece[1] == "p":
+                return self.getRankFile(self.sqStart[0], self.sqStart[1])[0] + "x" + self.getRankFile(self.sqEnd[0],
+                                                                                                      self.sqEnd[1])
+            else:
+                return self.movePiece[1] + "x" + self.getRankFile(self.sqEnd[0], self.sqEnd[1])
+        else:
+            if self.movePiece[1] == "p":
+                return self.getRankFile(self.sqEnd[0], self.sqEnd[1])
+            else:
+                return self.movePiece[1] + self.getRankFile(self.sqEnd[0], self.sqEnd[1])
 
 
 class CastleRights:
@@ -566,7 +598,12 @@ class CastleRights:
         self.wqs = wqs
         self.bqs = bqs
 
+    def __eq__(self, other):
+        if self.wks == other.wks and self.bks == other.bks and self.wqs == other.wqs and self.bqs == other.bqs:
+            return True
+        return False
+
 # if __name__ == '__main__':
-#     board = GameState().board
-#     move = Move((6, 0), (4, 0), board).getNotation()
-#     print(move)
+#     a =  CastleRights(True,True,True,True)
+#     b =  CastleRights(True,True,True,True)
+#     print(a==b)
