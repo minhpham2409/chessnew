@@ -15,17 +15,11 @@ class GameInit:
 
         # Surface for board game
         self.board_screen = pygame.Surface((WIDTH, HEIGHT))
-        # Surface for game status and controller
-        self.panel_screen = pygame.Surface((WIDTH_PANEL, HEIGHT))
+        self.background = pygame.Surface((WIDTH_WINDOW, HEIGHT_WINDOW))
+        self.background.fill((32, 32, 32))
 
         #   ---------------------------------- GUI ----------------------------------   #
-        self.manager = pygame_gui.UIManager((WIDTH_PANEL, HEIGHT_PANEL),theme_path="theme_custom.json")
-        self.text_box = pygame_gui.elements.UITextBox(
-            relative_rect=pygame.Rect((LEFT_MOVE_BOX, TOP_MOVE_BOX), (WIDTH_MOVE_BOX, HEIGHT_MOVE_BOX)),
-            html_text='',
-            manager=self.manager,
-        )
-
+        self.manager = pygame_gui.UIManager((WIDTH_WINDOW, HEIGHT_WINDOW), theme_path="theme_custom.json")
         self.gs = GameState()
         self.clock = pygame.time.Clock()
 
@@ -39,19 +33,21 @@ class GameInit:
         pieces = ['wp', 'wR', 'wN', 'wB', 'wK',
                   'wQ', 'bp', 'bR', 'bN', 'bB', 'bK', 'bQ']
         for piece in pieces:
-            self.IMAGES[piece] = pygame.transform.scale(pygame.image.load(f"./assets/images/{piece}.png"),
+            self.IMAGES[piece] = pygame.transform.scale(pygame.image.load(f"data/images/chess/{piece}.png"),
                                                         (SQ_SIZE, SQ_SIZE))
 
     # Load sound into memory
     def __loadSound(self):
-        self.sound_move = pygame.mixer.Sound('./assets/sound/move.wav')
-        self.sound_capture = pygame.mixer.Sound('./assets/sound/capture.wav')
+        self.sound_move = pygame.mixer.Sound('data/sound/move.wav')
+        self.sound_capture = pygame.mixer.Sound('data/sound/capture.wav')
 
     def drawGameScreen(self):
+        self.screen.blit(self.background, (0, 0))
         self.drawBoard()
         self.drawPiece()
         self.highlightSquares()
         self.screen.blit(self.board_screen, (0, 0))
+        self.manager.draw_ui(self.screen)
 
     def drawBoard(self):
         for i in range(DIMENSION):
@@ -82,4 +78,3 @@ class GameInit:
                 surface.set_alpha(150)
                 surface.fill(colorBoard[2])
                 self.board_screen.blit(surface, (y * SQ_SIZE, x * SQ_SIZE))
-

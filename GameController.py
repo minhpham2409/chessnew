@@ -1,8 +1,9 @@
-from GameMain import GameMain
 import pygame
 
+import test
 from MenuScreen import MenuScreen
 from PlayMode import PlayMode
+from PlayAIMode import PlayAIMode
 from config import *
 
 
@@ -10,7 +11,7 @@ class GameController:
     def __init__(self):
         pygame.init()
         pygame.display.set_caption("Cờ vua AI")
-        self.icon = pygame.image.load('assets/images/icon.jpg')
+        self.icon = pygame.image.load('data/images/icon.jpg')
 
         pygame.display.set_icon(self.icon)
         self.screen = pygame.display.set_mode((WIDTH_WINDOW, HEIGHT_WINDOW))
@@ -25,18 +26,19 @@ class GameController:
         # Apply function handler for each button
         menuScreen.menu.get_widget('PvP').set_onreturn(self.__inPlayScreen)
         menuScreen.menu.get_widget('PvC').set_onreturn(self.__inPlayAIScreen)
-        print("i am in menu screen")
 
         # Start menu loop
         menuScreen.mainLoop()
-        print("I am exiting menu")
 
     def __inPlayScreen(self):
-        playMode = PlayMode(self.screen)
-        playMode.mainLoop()
-
+        # playMode = PlayMode(self.screen)
+        # playMode.mainLoop()
+        tests = test.PlayMode(self.screen)
+        tests.run()
     def __inPlayAIScreen(self):
-        pass
+        playAIMode = PlayAIMode(self.screen)
+        playAIMode.mainLoop()
+        self.screen = pygame.display.set_mode((WIDTH_WINDOW, HEIGHT_WINDOW))
 
 
 if __name__ == "__main__":

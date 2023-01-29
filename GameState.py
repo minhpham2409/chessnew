@@ -1,6 +1,3 @@
-import util
-
-
 class GameState:
     rival = {'b': 'w', 'w': 'b'}
     trans = {'b': 'Black', 'w': "White"}
@@ -86,7 +83,6 @@ class GameState:
         self.castle_rights_log.append(
             CastleRights(self.current_castling_rights.wks, self.current_castling_rights.bks,
                          self.current_castling_rights.wqs, self.current_castling_rights.bqs))
-        print("len cast: ", len(self.castle_rights_log))
         self.turn = self.rival[self.turn]
         self.moveLog.append(move)
 
@@ -153,11 +149,9 @@ class GameState:
                 else:
                     d = dx + dy
                 square = []
-                print(d)
                 for i in range(1, d + 1):
                     square.append((self.kingLocation[self.turn][0] + i * pin[2][0],
                                    self.kingLocation[self.turn][1] + i * pin[2][1]))
-                util.print_squares(square)
                 moves_pin = self.getFunctionMove[type_pin](pin[0][0], pin[0][1], self.board)
                 for move in moves_pin:
                     if move.sqEnd in square:
@@ -307,7 +301,6 @@ class GameState:
                 if end_piece[0] == self.rival[self.turn] and end_piece[1] == "N":
                     checks.append((sqEnd, move))
 
-        util.printPinAndCheck(pins, checks)
         return pins, checks
 
     def _getPawnMoves(self, r, c, board, attackAble=False):
@@ -341,9 +334,9 @@ class GameState:
             moves.append(Move((r, c), des, board))
         if des == self.enpassant_possible:
             move = Move((r, c), des, board, enPassantSquare=self.enpassant_possible)
-            print("-------------------Generator Move en passant --------------------")
-            util.move_print_detail(move)
-            print("-------------------Generator Move en passant --------------------")
+            # print("-------------------Generator Move en passant --------------------")
+            # util.move_print_detail(move)
+            # print("-------------------Generator Move en passant --------------------")
             moves.append(move)
 
         des = (r + vP[self.turn][3][0], c + vP[self.turn][3][1])
@@ -352,9 +345,9 @@ class GameState:
         if des == self.enpassant_possible:
             move = Move((r, c), des, board, enPassantSquare=self.enpassant_possible)
             moves.append(move)
-            print("-------------------Generator Move en passant --------------------")
-            util.move_print_detail(move)
-            print("-------------------Generator Move en passant --------------------")
+            # print("-------------------Generator Move en passant --------------------")
+            # util.move_print_detail(move)
+            # print("-------------------Generator Move en passant --------------------")
 
         return moves
 
@@ -602,8 +595,3 @@ class CastleRights:
         if self.wks == other.wks and self.bks == other.bks and self.wqs == other.wqs and self.bqs == other.bqs:
             return True
         return False
-
-# if __name__ == '__main__':
-#     a =  CastleRights(True,True,True,True)
-#     b =  CastleRights(True,True,True,True)
-#     print(a==b)

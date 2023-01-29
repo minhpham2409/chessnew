@@ -67,13 +67,13 @@ class GameMain:
         pieces = ['wp', 'wR', 'wN', 'wB', 'wK',
                   'wQ', 'bp', 'bR', 'bN', 'bB', 'bK', 'bQ']
         for piece in pieces:
-            self.IMAGES[piece] = pygame.transform.scale(pygame.image.load(f"./assets/images/{piece}.png"),
+            self.IMAGES[piece] = pygame.transform.scale(pygame.image.load(f"data/images/{piece}.png"),
                                                         (SQ_SIZE, SQ_SIZE))
 
     # Load sound into memory
     def __loadSound(self):
-        self.sound_move = pygame.mixer.Sound('./assets/sound/move.wav')
-        self.sound_capture = pygame.mixer.Sound('./assets/sound/capture.wav')
+        self.sound_move = pygame.mixer.Sound('data/sound/move.wav')
+        self.sound_capture = pygame.mixer.Sound('data/sound/capture.wav')
 
     def drawScreen(self):
         self.drawBoard()

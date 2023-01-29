@@ -11,27 +11,62 @@ class PlayMode(GameInit):
         super().__init__(screen)
         self.__loadGUI()
         self.__editPanel()
+        self.time = 0
 
     def __loadGUI(self):
+
+        self.chess_panel = pygame_gui.elements.UIWindow(
+            rect=pygame.Rect((LEFT_PANEL, TOP_PANEL), (WIDTH_PANEL, HEIGHT_PANEL)),
+            manager=self.manager,
+            window_display_title='Panel chess'
+        )
+
+        self.text_box = pygame_gui.elements.UITextBox(
+            relative_rect=pygame.Rect((LEFT_MOVE_BOX, TOP_MOVE_BOX), (WIDTH_MOVE_BOX, HEIGHT_MOVE_BOX)),
+            html_text='',
+            manager=self.manager,
+            container=self.chess_panel
+        )
         self.label_time = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((LEFT_TIMER, TOP_TIMER), (WIDTH_LABEL, HEIGHT_LABEL)),
-            text='Time: ', manager=self.manager)
+            text='Time: ', manager=self.manager,
+            container=self.chess_panel
+        )
 
         self.label_turn = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((LEFT_TURN, TOP_TURN), (WIDTH_LABEL, HEIGHT_LABEL)),
-            text='Turn: ', manager=self.manager)
+            text='Turn: ', manager=self.manager,
+            container=self.chess_panel
+        )
 
         self.label_possible_move = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((LEFT_POSSIBLE_MOVE, TOP_POSSIBLE_MOVE), (WIDTH_LABEL, HEIGHT_LABEL)),
-            text='Possible moves: ', manager=self.manager)
+            text='Possible moves: ', manager=self.manager,
+            container=self.chess_panel
+        )
 
         self.label_incheck = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((LEFT_INCHECK, TOP_INCHECK), (WIDTH_LABEL, HEIGHT_LABEL)),
-            text='In Check : ', manager=self.manager)
+            text='In Check : ', manager=self.manager,
+            container=self.chess_panel
+        )
+
+        self.button_home = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((LEFT_BUTTON1, TOP_BUTTON), (WIDTH_BUTTON, HEIGHT_BUTTON)),
+            text='', manager=self.manager, container=self.chess_panel)
+
+        self.button_reset = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((LEFT_BUTTON2, TOP_BUTTON), (WIDTH_BUTTON, HEIGHT_BUTTON)),
+            text='', manager=self.manager, container=self.chess_panel)
+
+        self.button_undo = pygame_gui.elements.UIButton(
+            relative_rect=pygame.Rect((LEFT_BUTTON3, TOP_BUTTON), (WIDTH_BUTTON, HEIGHT_BUTTON)),
+            text='', manager=self.manager, container=self.chess_panel)
 
     def mainLoop(self):
-        self.running = True
         while self.running:
+            self.time_delta = self.clock.tick(MAX_FPS) / 1000
+            self.time += self.time_delta
             #   Handle event
             self.__eventHandler()
 
@@ -42,23 +77,16 @@ class PlayMode(GameInit):
                 self.moveMade = False
 
             #   Update screen
+            self.manager.update(self.time_delta)
             self.setClock()
-            self.__drawScreen()
+            self.drawGameScreen()
             pygame.display.update()
-
-    def __drawScreen(self):
-        self.drawGameScreen()
-        self.__drawPanel()
-        self.screen.blit(self.panel_screen, (WIDTH, 0))
-
-    def __drawPanel(self):
-        self.manager.update(0.066)
-        self.manager.draw_ui(self.panel_screen)
 
     def __eventHandler(self):
         for event in pygame.event.get():
             # Event occurs when click X button
             if event.type == pygame.QUIT:
+                print("Game Quit")
                 self.running = False
             # Event occurs when click into screen
             elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -83,6 +111,8 @@ class PlayMode(GameInit):
                 if event.key == pygame.K_k:
                     c = self.gs.current_castling_rights
                     print("current: ", c.wqs, c.wks, c.bqs, c.bks, c, sep='::')
+
+            self.manager.process_events(event)
 
     def __clickHandler(self):
         pos = pygame.mouse.get_pos()
@@ -127,9 +157,8 @@ class PlayMode(GameInit):
         self.label_incheck.set_text(f'In Check : {self.gs.inCheck}')
 
     def setClock(self):
-        time = pygame.time.get_ticks() // 1000
-        min = time // 60
-        sec = time % 60
+        min = self.time // 60
+        sec = self.time % 60
         s = "%02d:%02d" % (min, sec)
         self.label_time.set_text(f"Time: {s}")
 
