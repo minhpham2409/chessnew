@@ -31,10 +31,9 @@ class GameController:
         menuScreen.mainLoop()
 
     def __inPlayScreen(self):
-        # playMode = PlayMode(self.screen)
-        # playMode.mainLoop()
-        tests = test.PlayMode(self.screen)
-        tests.run()
+        playMode = PlayMode(self.screen)
+        playMode.mainLoop()
+
     def __inPlayAIScreen(self):
         playAIMode = PlayAIMode(self.screen)
         playAIMode.mainLoop()
