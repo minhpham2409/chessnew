@@ -86,11 +86,11 @@ class PlayAIMode(GameInit):
                 print("Game Quit")
                 self.running = False
             # Event occurs when press into a key
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.human_turn:
                     self.clickUserHandler()
 
-            elif event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 # Press r to reset
                 if event.key == pygame.K_r:
                     if self.ai_thinking:
