@@ -1,11 +1,13 @@
+"""
+This class responsible for representing a board and logic for game
+"""
+
+
 class GameState:
     rival = {'b': 'w', 'w': 'b'}
     trans = {'b': 'Black', 'w': "White"}
 
     def __init__(self):
-        # Direction of each piece
-        self.capturedPieces = {'wp': 0, 'wR': 0, 'wN': 0, 'wB': 0, 'wK': 0,
-                               'wQ': 0, 'bp': 0, 'bR': 0, 'bN': 0, 'bB': 0, 'bK': 0, 'bQ': 0}
 
         self.getFunctionMove = {'p': self._getPawnMoves, 'R': self._getRookMoves,
                                 'N': self._getKnightMoves, 'B': self._getBishopMoves,
@@ -23,6 +25,7 @@ class GameState:
 
         self.turn = 'w'
         self.moveLog = []
+
         self.kingLocation = {'w': (7, 4), 'b': (0, 4)}
         self.inCheck = False
 
@@ -37,10 +40,6 @@ class GameState:
         self.castle_rights_log = [CastleRights(True, True, True, True)]
 
     def makeMove(self, move):
-
-        # Add capture piece
-        if move.capturedPiece != '--':
-            self.capturedPieces[move.capturedPiece] += 1
 
         # Edit board
         self.board[move.sqEnd[0]][move.sqEnd[1]] = self.board[move.sqStart[0]][move.sqStart[1]]
@@ -318,9 +317,16 @@ class GameState:
             return moves
 
         # Check special move and detect en passant movself.board
-        if (self.turn == 'b' and r == 1) or (self.turn == 'w' and r == 6):
+        if self.turn == 'b' and r == 1:
             des = (r + vP[self.turn][0][0], c)
-            if self._checkValidRowCol(des) and board[des[0]][des[1]] == '--':
+            mid = ((des[0]+r)//2,(des[1]+c)//2)
+            if board[des[0]][des[1]] == '--' and board[mid[0]][mid[1]]== '--':
+                moves.append(Move((r, c), des, board))
+
+        if self.turn == 'w' and r == 6:
+            des = (r + vP[self.turn][0][0], c)
+            mid = ((des[0]+r)//2,(des[1]+c)//2)
+            if board[des[0]][des[1]] == '--' and board[mid[0]][mid[1]]== '--':
                 moves.append(Move((r, c), des, board))
 
         des = (r + vP[self.turn][1][0], c)
@@ -508,7 +514,7 @@ class GameState:
         return 1
 
     def getMoveNotation(self):
-        s = '{0:5}{1:10}{2:10}'.format("", "White", "Black")
+        s = '{0:4}{1:8}{2:8}'.format("", "White", "Black")
         move_turn = 0
         for move in self.moveLog:
             if move_turn % 2 == 0:

@@ -1,9 +1,10 @@
-import pygame
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
-import test
+import pygame
 from MenuScreen import MenuScreen
-from PlayMode import PlayMode
-from PlayAIMode import PlayAIMode
+from GameMode.PlayMode import PlayMode
+from GameMode.PlayAIMode import PlayAIMode
 from config import *
 
 
@@ -31,11 +32,11 @@ class GameController:
         menuScreen.mainLoop()
 
     def __inPlayScreen(self):
-        playMode = PlayMode(self.screen)
+        playMode = PlayMode()
         playMode.mainLoop()
 
     def __inPlayAIScreen(self):
-        playAIMode = PlayAIMode(self.screen)
+        playAIMode = PlayAIMode()
         playAIMode.mainLoop()
         self.screen = pygame.display.set_mode((WIDTH_WINDOW, HEIGHT_WINDOW))
 

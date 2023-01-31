@@ -1,7 +1,8 @@
 # Simplified Evaluation Function
 import math
+import time
 
-from GameState import GameState
+from ChessEngine import GameState
 from config import DEPTH
 
 piece_score = {"K": 20000, "Q": 900, "R": 500, "B": 330, "N": 320, "p": 100}
@@ -87,7 +88,13 @@ piece_position_scores = {"wN": knight_scores,
 class AIEngine:
     def __init__(self):
         self.bestMove = None
-        self.nodeCount = 0
+        self.total_nodes = 0
+        self.total_branch_cutoff = 0
+        self.total_nodes_leaf = 0
+        self.maxScore = 0
+        self.executionTime = 0
+        self.algoSearch = 'Alpha Beta'
+
     # Heuristic 1
     @staticmethod
     def getMaterialScore(gs):
@@ -117,18 +124,34 @@ class AIEngine:
                         score -= piece_position_scores[piece][row][col]
         return score
 
-    def MiniMax(self, gs: GameState, depth):
+    def MiniMax(self, gs: GameState, depth, returned_queue):
         self.__resetParameter()
-        self.__MiniMax(gs, depth, True)
+        self.algoSearch = "Minimax"
+        start = time.time()
+        self.maxScore = self.__MiniMax(gs, depth, True)
+        self.executionTime = time.time() - start
+        returned_queue.put(self)
+
+    def AlphaBetaPruning(self, gs: GameState, depth, alpha, beta, returned_queue):
+        self.__resetParameter()
+        self.algoSearch = "Alpha Beta"
+        start = time.time()
+        self.maxScore = self.__AlphaBetaPruning(gs, depth, alpha, beta, True)
+        self.executionTime = time.time() - start
+
+        returned_queue.put(self)
 
     def __resetParameter(self):
         self.bestMove = None
-        self.nodeCount = 0
+        self.total_node = 0
+        self.total_branch_cutoff = 0
+        self.total_nodes_leaf = 0
 
     def __MiniMax(self, gs: GameState, depth, maximizingPlayer):
         """Return a move """
         if depth == 0:
-            self.nodeCount += 1
+            self.total_node += 1
+            self.total_nodes_leaf += 1
             return AIEngine.evaluation(gs)
 
         moves = gs.getValidMoves()
@@ -136,25 +159,66 @@ class AIEngine:
             maxEval = - math.inf
             for move in moves:
                 gs.makeMove(move)
-                self.nodeCount += 1
+                self.total_node += 1
                 eval_score = self.__MiniMax(gs, depth - 1, False)
+                gs.undoMove()
                 if eval_score > maxEval:
                     maxEval = eval_score
                     if depth == DEPTH:
                         self.bestMove = move
-                gs.undoMove()
             return maxEval
         else:
             minEval = math.inf
             for move in moves:
                 gs.makeMove(move)
-                self.nodeCount += 1
+                self.total_node += 1
                 eval_score = self.__MiniMax(gs, depth - 1, True)
+                gs.undoMove()
                 if eval_score < minEval:
                     minEval = eval_score
                     if depth == DEPTH:
                         self.bestMove = move
+            return minEval
+
+    def __AlphaBetaPruning(self, gs: GameState, depth, alpha, beta, maximizingPlayer):
+        """Return a move """
+        if depth == 0:
+            self.total_nodes_leaf += 1
+            self.total_node += 1
+            return AIEngine.evaluation(gs)
+
+        moves = gs.getValidMoves()
+        if maximizingPlayer:
+            maxEval = - math.inf
+            for move in moves:
+                gs.makeMove(move)
+                self.total_node += 1
+                eval_score = self.__AlphaBetaPruning(gs, depth - 1, alpha, beta, False)
                 gs.undoMove()
+                if eval_score > maxEval:
+                    maxEval = eval_score
+                    if depth == DEPTH:
+                        self.bestMove = move
+                alpha = max(alpha, eval_score)
+                if beta <= alpha:
+                    self.total_branch_cutoff += 1
+                    break
+            return maxEval
+        else:
+            minEval = math.inf
+            for move in moves:
+                gs.makeMove(move)
+                self.total_node += 1
+                eval_score = self.__AlphaBetaPruning(gs, depth - 1, alpha, beta, True)
+                gs.undoMove()
+                if eval_score < minEval:
+                    minEval = eval_score
+                    if depth == DEPTH:
+                        self.bestMove = move
+                beta = min(beta, eval_score)
+                if beta < alpha:
+                    self.total_branch_cutoff += 1
+                    break
             return minEval
 
     @staticmethod
