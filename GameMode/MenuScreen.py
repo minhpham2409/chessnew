@@ -1,14 +1,14 @@
 import pygame
 import pygame_menu
 import sys
-from config import *
+from data.config import *
 
 
 class MenuScreen:
     def __init__(self, screen):
         self.screen = screen
         # Setting menu background
-        self.bg = pygame.transform.scale(pygame.image.load("data/images/bg.jpg"), (WIDTH_WINDOW, HEIGHT_WINDOW))
+        self.bg = pygame.transform.scale(pygame.image.load("./data/images/bg.jpg"), (WIDTH_WINDOW, HEIGHT_WINDOW))
         # theme setting
         font = pygame_menu.font.FONT_8BIT
         my_theme = pygame_menu.Theme(background_color=(0, 0, 0, 50),

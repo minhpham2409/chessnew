@@ -1,7 +1,7 @@
 import pygame
 
 from GameMode.GameInit import GameInit
-from config import *
+from data.config import *
 
 
 class PlayMode(GameInit):
@@ -12,13 +12,15 @@ class PlayMode(GameInit):
     def mainLoop(self):
         while self.running:
             self.time_delta = self.clock.tick(MAX_FPS) / 1000
-            self.time += self.time_delta
             #   Handle event
             self.__eventHandler()
 
             #  move update
             if self.moveMade:
                 self.validMoves = self.gs.getValidMoves()
+                if len(self.validMoves) == 0:
+                    self.gameOver = True
+
                 self.editChessPanel()
                 self.moveMade = False
 
@@ -46,6 +48,7 @@ class PlayMode(GameInit):
                 if event.key == pygame.K_z:
                     self.gs.undoMove()
                     self.moveMade = True
+                    self.gameOver = False
 
                 if event.key == pygame.K_u:
                     i = 1

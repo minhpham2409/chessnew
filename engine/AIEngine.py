@@ -2,8 +2,8 @@
 import math
 import time
 
-from ChessEngine import GameState
-from config import DEPTH
+from engine.ChessEngine import GameState
+from data.config import DEPTH
 
 piece_score = {"K": 20000, "Q": 900, "R": 500, "B": 330, "N": 320, "p": 100}
 

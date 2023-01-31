@@ -1,8 +1,8 @@
 import pygame
 import pygame_gui
 
-from ChessEngine import GameState
-from config import *
+from engine.ChessEngine import GameState
+from data.config import *
 
 
 class GameInit:
@@ -10,7 +10,13 @@ class GameInit:
 
         self.screen = pygame.display.get_surface()
         self.IMAGES = {}
+
         self.__loadImages()
+        self.image_black_win = pygame.transform.scale(pygame.image.load('./data/images/black_win.jpg'), (2.62*SQ_SIZE,SQ_SIZE))
+        self.image_black_win.set_alpha(200)
+        self.image_white_win = pygame.transform.scale(pygame.image.load('./data/images/white_win.jpg'), (2.62*SQ_SIZE,SQ_SIZE))
+        self.image_white_win.set_alpha(200)
+
         self.__loadSound()
 
         # Surface for board game
@@ -29,7 +35,7 @@ class GameInit:
         self.moveMade = False
         self.validMoves = self.gs.getValidMoves()
         self.running = True
-        self.time = 0
+        self.gameOver = False
 
         self.editChessPanel()
 
@@ -86,6 +92,8 @@ class GameInit:
         self.highlightSquares()
         self.screen.blit(self.screen, (0, 0))
         self.manager.draw_ui(self.screen)
+        if self.gameOver:
+            self.drawGameOver()
 
     def drawLastMove(self):
         if self.gs.moveLog:
@@ -113,6 +121,12 @@ class GameInit:
                 if piece != "--":
                     self.screen.blit(self.IMAGES[piece], pygame.Rect(j * SQ_SIZE, i * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
+    def drawGameOver(self):
+        if self.gs.turn == 'w':
+            self.screen.blit(self.image_black_win, (191, 223))
+        else:
+            self.screen.blit(self.image_white_win, (191, 223))
+
     def highlightSquares(self):
         sqHighlight = []
 
@@ -136,6 +150,7 @@ class GameInit:
 
     def clickUserHandler(self):
         pos = pygame.mouse.get_pos()
+        print(pos)
         x = int(pos[1] / SQ_SIZE)
         y = int(pos[0] / SQ_SIZE)
 

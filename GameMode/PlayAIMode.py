@@ -3,10 +3,10 @@ import math
 import pygame
 import pygame_gui.elements
 
-from AIEngine import AIEngine
+from engine.AIEngine import AIEngine
 from GameMode.GameInit import GameInit
 from multiprocessing import Process, Queue
-from config import *
+from data.config import *
 
 
 class PlayAIMode(GameInit):
@@ -39,12 +39,15 @@ class PlayAIMode(GameInit):
             self.human_turn = self.gs.turn == 'w'
             self.__eventHandler()
 
-            if not self.human_turn and self.signal:
+            if not self.human_turn and self.signal and not self.gameOver:
                 self.__AIProcess()
 
             if self.moveMade:
                 if not self.human_turn:
                     self.validMoves = self.gs.getValidMoves()
+                    if len(self.validMoves) == 0:
+                        self.gameOver = True
+
                     self.editAIPanel()
                 self.editChessPanel()
                 self.moveMade = False
@@ -108,6 +111,7 @@ class PlayAIMode(GameInit):
                     self.editAIPanel()
                     self.moveMade = True
                     self.signal = False
+                    self.gameOver = False
 
             self.manager.process_events(event)
 
