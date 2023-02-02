@@ -28,6 +28,7 @@ class PlayAIMode(GameInit):
 
         self.human_turn = True
         self.ai_thinking = False
+        self.isEndGame = False
 
         self.find_move_process = None
         self.q = Queue()
@@ -49,6 +50,8 @@ class PlayAIMode(GameInit):
                         self.gameOver = True
 
                     self.editAIPanel()
+                self.isEndGame = self.__checkEndGame(self.gs)
+                self.aiEngine.isEndGame = self.isEndGame
                 self.editChessPanel()
                 self.moveMade = False
                 self.signal = True
@@ -89,11 +92,11 @@ class PlayAIMode(GameInit):
                 print("Game Quit")
                 self.running = False
             # Event occurs when press into a key
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 if self.human_turn:
                     self.clickUserHandler()
 
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
                 # Press r to reset
                 if event.key == pygame.K_r:
                     if self.ai_thinking:
@@ -101,8 +104,7 @@ class PlayAIMode(GameInit):
                     self.__reset()
 
                 # Press z to undo
-                if event.key == pygame.K_z:
-                    print("Press z")
+                elif event.key == pygame.K_z:
                     if self.ai_thinking:
                         self.find_move_process.terminate()
                         self.ai_thinking = False
@@ -174,3 +176,21 @@ class PlayAIMode(GameInit):
     def __reset(self):
         self.__init__()
         print("Reset game")
+
+    @staticmethod
+    def __checkEndGame(gs):
+        if gs.piece_ingame['wQ'] == 0 and gs.piece_ingame['bQ'] == 0:
+            return True
+        if gs.piece_ingame['wQ'] == 1 and gs.piece_ingame['bQ'] == 1:
+            white_minor_piece = 0
+            black_minor_piece = 0
+            for u,v in gs.piece_ingame.items():
+                if u[1] == 'N' or u[1] == 'B':
+                    if u[0] == 'w':
+                        white_minor_piece += v
+                    else:
+                        black_minor_piece += v
+            if white_minor_piece <= 1 and black_minor_piece <= 1:
+                return True
+
+        return False

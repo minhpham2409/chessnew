@@ -1,8 +1,3 @@
-"""
-This class responsible for representing a board and logic for game
-"""
-
-
 class GameState:
     rival = {'b': 'w', 'w': 'b'}
     trans = {'b': 'Black', 'w': "White"}
@@ -12,6 +7,13 @@ class GameState:
         self.getFunctionMove = {'p': self._getPawnMoves, 'R': self._getRookMoves,
                                 'N': self._getKnightMoves, 'B': self._getBishopMoves,
                                 'Q': self._getQueenMoves, 'K': self._getKingMoves}
+        self.piece_ingame = {'wp': 8, 'wR': 2,
+                             'wN': 2, 'wB': 2,
+                             'wQ': 1, 'wK': 1,
+                             'bp': 8, 'bR': 2,
+                             'bN': 2, 'bB': 2,
+                             'bQ': 1, 'bK': 1
+                             }
 
         self.board = [
             ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
@@ -40,6 +42,16 @@ class GameState:
         self.castle_rights_log = [CastleRights(True, True, True, True)]
 
     def makeMove(self, move):
+
+        if move.capturedPiece != '--':
+            self.piece_ingame[move.capturedPiece] -= 1
+        if move.isPawnPromotion:
+            if self.turn == 'w':
+                self.piece_ingame['wp'] -= 1
+                self.piece_ingame['wQ'] += 1
+            else:
+                self.piece_ingame['bp'] -= 1
+                self.piece_ingame['bQ'] += 1
 
         # Edit board
         self.board[move.sqEnd[0]][move.sqEnd[1]] = self.board[move.sqStart[0]][move.sqStart[1]]
@@ -88,9 +100,22 @@ class GameState:
     def undoMove(self):
         if self.moveLog:
             move = self.moveLog.pop()
+
+
             self.board[move.sqStart[0]][move.sqStart[1]] = move.movePiece
             self.board[move.sqEnd[0]][move.sqEnd[1]] = move.capturedPiece
             self.turn = self.rival[self.turn]
+
+            if move.capturedPiece != '--':
+                self.piece_ingame[move.capturedPiece] += 1
+            if move.isPawnPromotion:
+                if self.turn == 'w':
+                    self.piece_ingame['wp'] += 1
+                    self.piece_ingame['wQ'] -= 1
+                else:
+                    self.piece_ingame['bp'] += 1
+                    self.piece_ingame['bQ'] -= 1
+
 
             # If king move, update king position
             if move.movePiece[1] == 'K':
@@ -319,14 +344,14 @@ class GameState:
         # Check special move and detect en passant movself.board
         if self.turn == 'b' and r == 1:
             des = (r + vP[self.turn][0][0], c)
-            mid = ((des[0]+r)//2,(des[1]+c)//2)
-            if board[des[0]][des[1]] == '--' and board[mid[0]][mid[1]]== '--':
+            mid = ((des[0] + r) // 2, (des[1] + c) // 2)
+            if board[des[0]][des[1]] == '--' and board[mid[0]][mid[1]] == '--':
                 moves.append(Move((r, c), des, board))
 
         if self.turn == 'w' and r == 6:
             des = (r + vP[self.turn][0][0], c)
-            mid = ((des[0]+r)//2,(des[1]+c)//2)
-            if board[des[0]][des[1]] == '--' and board[mid[0]][mid[1]]== '--':
+            mid = ((des[0] + r) // 2, (des[1] + c) // 2)
+            if board[des[0]][des[1]] == '--' and board[mid[0]][mid[1]] == '--':
                 moves.append(Move((r, c), des, board))
 
         des = (r + vP[self.turn][1][0], c)
@@ -514,13 +539,13 @@ class GameState:
         return 1
 
     def getMoveNotation(self):
-        s = '{0:4}{1:8}{2:8}'.format("", "White", "Black")
+        s = '{0:4}{1:7}{2:7}'.format("", "White", "Black")
         move_turn = 0
         for move in self.moveLog:
             if move_turn % 2 == 0:
                 turn = f'{str(move_turn // 2 + 1)}.'
-                s += '\n{0:5}'.format(turn)
-            s += '{0:10}'.format(move.getChessNotation())
+                s += '\n{0:4}'.format(turn)
+            s += '{0:7}'.format(move.getChessNotation())
             move_turn += 1
         return s
 

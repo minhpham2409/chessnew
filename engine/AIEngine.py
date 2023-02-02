@@ -94,6 +94,7 @@ class AIEngine:
         self.maxScore = 0
         self.executionTime = 0
         self.algoSearch = 'Alpha Beta'
+        self.isEndGame = False
 
     # Heuristic 1
     @staticmethod
@@ -111,9 +112,15 @@ class AIEngine:
         return black_score - white_score
 
     # Heuristic 2
-    @staticmethod
-    def getPiecePositionScore(gs):
+    def getPiecePositionScore(self, gs):
         score = 0
+        if self.isEndGame:
+            piece_position_scores['wK'] = king_end_score
+            piece_position_scores['bK'] = king_end_score[::-1]
+        else:
+            piece_position_scores['wK'] = king_middle_score
+            piece_position_scores['bK'] = king_middle_score[::-1]
+
         for row in range(len(gs.board)):
             for col in range(len(gs.board[row])):
                 piece = gs.board[row][col]
@@ -148,11 +155,12 @@ class AIEngine:
         self.total_nodes_leaf = 0
 
     def __MiniMax(self, gs: GameState, depth, maximizingPlayer):
+
         """Return a move """
         if depth == 0:
             self.total_node += 1
             self.total_nodes_leaf += 1
-            return AIEngine.evaluation(gs)
+            return self.evaluation(gs)
 
         moves = gs.getValidMoves()
         if maximizingPlayer:
@@ -181,11 +189,9 @@ class AIEngine:
             return minEval
 
     def __AlphaBetaPruning(self, gs: GameState, depth, alpha, beta, maximizingPlayer):
-        """Return a move """
         if depth == 0:
             self.total_nodes_leaf += 1
-            self.total_node += 1
-            return AIEngine.evaluation(gs)
+            return self.evaluation(gs)
 
         moves = gs.getValidMoves()
         if maximizingPlayer:
@@ -221,7 +227,6 @@ class AIEngine:
                     break
             return minEval
 
-    @staticmethod
-    def evaluation(gs):
-        score = AIEngine.getPiecePositionScore(gs) + AIEngine.getMaterialScore(gs)
+    def evaluation(self, gs):
+        score = self.getPiecePositionScore(gs) + AIEngine.getMaterialScore(gs)
         return score

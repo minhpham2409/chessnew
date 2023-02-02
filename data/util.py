@@ -1,5 +1,4 @@
 def move_print_detail(move):
-
     print("is Enpassant: ", move.isEnpassant)
     print("sqStart : ", move.sqStart)
     print("sqEnd: ", move.sqEnd)
@@ -17,13 +16,13 @@ def getNumberOfMoves(moves):
     print(f'It has total {len(moves)} possible moves')
 
 
-def logGameStatus(capturedPieces):
+def logGameStatus(capturePieces: type({})):
     print("Display game status:")
     print("-------------------------White-------------------------")
-    print(f"Capture Pawn: {capturedPieces['bp']}")
+    for u, v in capturePieces.items():
+        print(u, v, sep=" : ", end='\n')
 
     print("-------------------------Black-------------------------")
-    print(f"Capture Pawn: {capturedPieces['wp']}")
 
 
 def printBoard(board):
@@ -39,8 +38,9 @@ def printBoard(board):
 def print_squares(squares):
     print("Print Square")
     for square in squares:
-        print(f'({square[0]},{square[1]})',end="     ")
+        print(f'({square[0]},{square[1]})', end="     ")
     print("")
+
 
 def printPinAndCheck(pins, checks):
     if len(checks) == 0:

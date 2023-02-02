@@ -2,6 +2,7 @@ import pygame
 
 from GameMode.GameInit import GameInit
 from data.config import *
+from data.util import logGameStatus
 
 
 class PlayMode(GameInit):
@@ -45,20 +46,14 @@ class PlayMode(GameInit):
                     self.__reset()
 
                 # Press z to undo
-                if event.key == pygame.K_z:
+                elif event.key == pygame.K_z:
                     self.gs.undoMove()
                     self.moveMade = True
                     self.gameOver = False
 
-                if event.key == pygame.K_u:
-                    i = 1
-                    for c in self.gs.castle_rights_log:
-                        print(i, c.wqs, c.wks, c.bqs, c.bks, c, sep='::')
-                        i += 1
 
-                if event.key == pygame.K_k:
-                    c = self.gs.current_castling_rights
-                    print("current: ", c.wqs, c.wks, c.bqs, c.bks, c, sep='::')
+                elif event.key == pygame.K_u:
+                    logGameStatus(self.gs.piece_ingame)
 
             self.manager.process_events(event)
 

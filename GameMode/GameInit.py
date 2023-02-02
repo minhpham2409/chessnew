@@ -150,7 +150,6 @@ class GameInit:
 
     def clickUserHandler(self):
         pos = pygame.mouse.get_pos()
-        print(pos)
         x = int(pos[1] / SQ_SIZE)
         y = int(pos[0] / SQ_SIZE)
 
