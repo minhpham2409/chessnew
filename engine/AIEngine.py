@@ -158,7 +158,6 @@ class AIEngine:
 
         """Return a move """
         if depth == 0:
-            self.total_node += 1
             self.total_nodes_leaf += 1
             return self.evaluation(gs)
 

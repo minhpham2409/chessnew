@@ -48,8 +48,11 @@ class PlayAIMode(GameInit):
                     self.validMoves = self.gs.getValidMoves()
                     if len(self.validMoves) == 0:
                         self.gameOver = True
-
                     self.editAIPanel()
+                else:
+                    if self.aiEngine.bestMove is None:
+                        self.gameOver = True
+
                 self.isEndGame = self.__checkEndGame(self.gs)
                 self.aiEngine.isEndGame = self.isEndGame
                 self.editChessPanel()
@@ -72,16 +75,17 @@ class PlayAIMode(GameInit):
         if not self.find_move_process.is_alive():
             self.aiEngine = self.q.get()
             self.ai_thinking = False
-            self.gs.makeMove(self.aiEngine.bestMove)
-            if self.aiEngine.bestMove.capturedPiece == '--':
-                pygame.mixer.Sound.play(self.sound_move)
-            else:
-                pygame.mixer.Sound.play(self.sound_capture)
+            if self.aiEngine.bestMove:
+                self.gs.makeMove(self.aiEngine.bestMove)
+                if self.aiEngine.bestMove.capturedPiece == '--':
+                    pygame.mixer.Sound.play(self.sound_move)
+                else:
+                    pygame.mixer.Sound.play(self.sound_capture)
 
-            self.total_nodes_log.append(self.aiEngine.total_node)
-            self.total_branch_cutoff_log.append(self.aiEngine.total_branch_cutoff)
-            self.total_nodes_leaf_log.append(self.aiEngine.total_nodes_leaf)
-            self.executionTime_log.append(self.aiEngine.executionTime)
+                self.total_nodes_log.append(self.aiEngine.total_node)
+                self.total_branch_cutoff_log.append(self.aiEngine.total_branch_cutoff)
+                self.total_nodes_leaf_log.append(self.aiEngine.total_nodes_leaf)
+                self.executionTime_log.append(self.aiEngine.executionTime)
 
             self.moveMade = True
 
