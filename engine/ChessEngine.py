@@ -237,8 +237,8 @@ class GameState:
         else:
             moves = king_moves
 
-        if not moves:
-            print("Check mate")
+        # if not moves:
+        #     print("Check mate")
         self.current_castling_rights = temp_castle_rights
 
         return moves

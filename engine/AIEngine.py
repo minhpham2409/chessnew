@@ -86,7 +86,8 @@ piece_position_scores = {"wN": knight_scores,
 
 
 class AIEngine:
-    def __init__(self):
+    def __init__(self,aiTurn):
+        self.aiTurn = aiTurn
         self.bestMove = None
         self.total_nodes = 0
         self.total_branch_cutoff = 0
@@ -95,6 +96,7 @@ class AIEngine:
         self.executionTime = 0
         self.algoSearch = 'Alpha Beta'
         self.isEndGame = False
+        self.timeGenerateMoves = 0
 
     # Heuristic 1
     @staticmethod
@@ -153,6 +155,8 @@ class AIEngine:
         self.total_node = 0
         self.total_branch_cutoff = 0
         self.total_nodes_leaf = 0
+        self.timeGenerateMoves = 0
+
 
     def __MiniMax(self, gs: GameState, depth, maximizingPlayer):
 
@@ -192,7 +196,9 @@ class AIEngine:
             self.total_nodes_leaf += 1
             return self.evaluation(gs)
 
+        start = time.time()
         moves = gs.getValidMoves()
+        self.timeGenerateMoves += time.time() - start
         if maximizingPlayer:
             maxEval = - math.inf
             for move in moves:
@@ -227,5 +233,8 @@ class AIEngine:
             return minEval
 
     def evaluation(self, gs):
-        score = self.getPiecePositionScore(gs) + AIEngine.getMaterialScore(gs)
+        if self.aiTurn == 'b':
+            score = self.getPiecePositionScore(gs) + AIEngine.getMaterialScore(gs)
+        else:
+            score = - self.getPiecePositionScore(gs) - AIEngine.getMaterialScore(gs)
         return score

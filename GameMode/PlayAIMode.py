@@ -13,7 +13,8 @@ class PlayAIMode(GameInit):
 
     def __init__(self):
         super().__init__()
-        self.aiEngine = AIEngine()
+        self.aiTurn = 'b'
+        self.aiEngine = AIEngine(self.aiTurn)
         self.screen = pygame.display.set_mode((WIDTH_WINDOW_AI, HEIGHT_WINDOW_AI))
         self.manager.set_window_resolution((WIDTH_WINDOW_AI, HEIGHT_WINDOW_AI))
         self.__loadGUIAI()
@@ -29,7 +30,6 @@ class PlayAIMode(GameInit):
         self.human_turn = True
         self.ai_thinking = False
         self.isEndGame = False
-
         self.find_move_process = None
         self.q = Queue()
 
@@ -37,7 +37,7 @@ class PlayAIMode(GameInit):
 
         while self.running:
             self.time_delta = self.clock.tick(MAX_FPS) / 1000
-            self.human_turn = self.gs.turn == 'w'
+            self.human_turn = self.gs.turn != self.aiTurn
             self.__eventHandler()
 
             if not self.human_turn and self.signal and not self.gameOver:
@@ -46,15 +46,16 @@ class PlayAIMode(GameInit):
             if self.moveMade:
                 if not self.human_turn:
                     self.validMoves = self.gs.getValidMoves()
-                    if len(self.validMoves) == 0:
-                        self.gameOver = True
+                    # if len(self.validMoves) == 0:
+                    #     self.gameOver = True
                     self.editAIPanel()
-                else:
-                    if self.aiEngine.bestMove is None:
-                        self.gameOver = True
+                # else:
+                #     if self.aiEngine.bestMove is None:
+                #         self.gameOver = True
 
                 self.isEndGame = self.__checkEndGame(self.gs)
                 self.aiEngine.isEndGame = self.isEndGame
+                print("end game: ",self.isEndGame)
                 self.editChessPanel()
                 self.moveMade = False
                 self.signal = True
@@ -81,6 +82,11 @@ class PlayAIMode(GameInit):
                     pygame.mixer.Sound.play(self.sound_move)
                 else:
                     pygame.mixer.Sound.play(self.sound_capture)
+
+                print("------------------")
+                print(f"Total time:  {self.aiEngine.executionTime}")
+                print(f"Time generate moves: {self.aiEngine.timeGenerateMoves}")
+                print("------------------")
 
                 self.total_nodes_log.append(self.aiEngine.total_node)
                 self.total_branch_cutoff_log.append(self.aiEngine.total_branch_cutoff)
