@@ -14,4 +14,4 @@ pip install -r requirement.txt
 
 Sau đó vào file game.py để chạy
 
-add12
+add123
