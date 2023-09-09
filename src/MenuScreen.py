@@ -1,7 +1,9 @@
+import sys
+
 import pygame
 import pygame_menu
-import sys
-from data.config import *
+
+from src.config import *
 
 
 class MenuScreen:

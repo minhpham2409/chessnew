@@ -1,8 +1,8 @@
 import pygame
 
-from GameMode.GameInit import GameInit
-from data.config import *
-from data.util import logGameStatus
+from src.GameInit import GameInit
+from src.config import *
+from src.utils import logGameStatus
 
 
 class PlayMode(GameInit):

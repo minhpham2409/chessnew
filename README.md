@@ -1,17 +1,39 @@
-# Giới thiệu
+Giới thiệu
+---
 
-Sản phẩm của Group 1 trong học phần Nhập môn trí tuệ nhân tạo
+Xây dựng game cờ vua sử dụng trí tuệ nhân tạo
 
-Chương trình xây dựng nhằm tìm hiểu các thuật toán 
-AI trong các trò chơi đối kháng, Minimax và 
-Alpha Beta Pruning
+Các phương pháp áp dụng:
+- Thuật toán tìm kiếm nước đi Alpha-beta Prunning và Minimax
+- Các hàm đánh giá Heuristic
 
+Chạy chương trình
+---
+Command:
 
-# Hướng dẫn cài đặt chương trình
-Cài đặt module cần thiết, vào terminal gõ:
-
+```
 pip install -r requirement.txt
 
-Sau đó vào file game.py để chạy
+python game.py
+```
 
-add123
+Kết quả
+---
+1. Trò chơi có 2 chế độ:
+- Người với Người
+- Người với Máy
+
+![img.png](result/menu.png)
+
+2. Các phím tắt hỗ trợ:
+- Phím Z: undo lại nước đi
+- Phím R: reset lại game
+
+Và các tính năng gợi ý nước có thể, lịch sử các nước đi,...
+
+![img.png](result/gameplay.png)
+
+Reference
+---
+
+https://www.chessprogramming.org/Main_Page

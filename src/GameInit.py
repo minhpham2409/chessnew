@@ -2,7 +2,7 @@ import pygame
 import pygame_gui
 
 from engine.ChessEngine import GameState
-from data.config import *
+from src.config import *
 
 
 class GameInit:
@@ -12,9 +12,11 @@ class GameInit:
         self.IMAGES = {}
 
         self.__loadImages()
-        self.image_black_win = pygame.transform.scale(pygame.image.load('./data/images/black_win.jpg'), (2.62*SQ_SIZE,SQ_SIZE))
+        self.image_black_win = pygame.transform.scale(pygame.image.load('./data/images/black_win.jpg'),
+                                                      (2.62 * SQ_SIZE, SQ_SIZE))
         self.image_black_win.set_alpha(200)
-        self.image_white_win = pygame.transform.scale(pygame.image.load('./data/images/white_win.jpg'), (2.62*SQ_SIZE,SQ_SIZE))
+        self.image_white_win = pygame.transform.scale(pygame.image.load('./data/images/white_win.jpg'),
+                                                      (2.62 * SQ_SIZE, SQ_SIZE))
         self.image_white_win.set_alpha(200)
 
         self.__loadSound()

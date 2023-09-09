@@ -3,10 +3,10 @@ from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 
 import pygame
-from GameMode.MenuScreen import MenuScreen
-from GameMode.PlayMode import PlayMode
-from GameMode.PlayAIMode import PlayAIMode
-from data.config import *
+from src.MenuScreen import MenuScreen
+from src.PlayMode import PlayMode
+from src.PlayAIMode import PlayAIMode
+from src.config import *
 
 
 class GameController:

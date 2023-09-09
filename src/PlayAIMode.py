@@ -1,12 +1,12 @@
 import math
+from multiprocessing import Process, Queue
 
 import pygame
 import pygame_gui.elements
 
 from engine.AIEngine import AIEngine
-from GameMode.GameInit import GameInit
-from multiprocessing import Process, Queue
-from data.config import *
+from src.GameInit import GameInit
+from src.config import *
 
 
 class PlayAIMode(GameInit):
@@ -55,7 +55,7 @@ class PlayAIMode(GameInit):
 
                 self.isEndGame = self.__checkEndGame(self.gs)
                 self.aiEngine.isEndGame = self.isEndGame
-                print("end game: ",self.isEndGame)
+                print("end game: ", self.isEndGame)
                 self.editChessPanel()
                 self.moveMade = False
                 self.signal = True
@@ -194,7 +194,7 @@ class PlayAIMode(GameInit):
         if gs.piece_ingame['wQ'] == 1 and gs.piece_ingame['bQ'] == 1:
             white_minor_piece = 0
             black_minor_piece = 0
-            for u,v in gs.piece_ingame.items():
+            for u, v in gs.piece_ingame.items():
                 if u[1] == 'N' or u[1] == 'B':
                     if u[0] == 'w':
                         white_minor_piece += v

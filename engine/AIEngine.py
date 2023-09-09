@@ -3,7 +3,7 @@ import math
 import time
 
 from engine.ChessEngine import GameState
-from data.config import DEPTH
+from src.config import DEPTH
 
 piece_score = {"K": 20000, "Q": 900, "R": 500, "B": 330, "N": 320, "p": 100}
 
@@ -86,7 +86,7 @@ piece_position_scores = {"wN": knight_scores,
 
 
 class AIEngine:
-    def __init__(self,aiTurn):
+    def __init__(self, aiTurn):
         self.aiTurn = aiTurn
         self.bestMove = None
         self.total_nodes = 0
@@ -156,7 +156,6 @@ class AIEngine:
         self.total_branch_cutoff = 0
         self.total_nodes_leaf = 0
         self.timeGenerateMoves = 0
-
 
     def __MiniMax(self, gs: GameState, depth, maximizingPlayer):
 

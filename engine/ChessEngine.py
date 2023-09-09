@@ -101,7 +101,6 @@ class GameState:
         if self.moveLog:
             move = self.moveLog.pop()
 
-
             self.board[move.sqStart[0]][move.sqStart[1]] = move.movePiece
             self.board[move.sqEnd[0]][move.sqEnd[1]] = move.capturedPiece
             self.turn = self.rival[self.turn]
@@ -115,7 +114,6 @@ class GameState:
                 else:
                     self.piece_ingame['bp'] += 1
                     self.piece_ingame['bQ'] -= 1
-
 
             # If king move, update king position
             if move.movePiece[1] == 'K':
