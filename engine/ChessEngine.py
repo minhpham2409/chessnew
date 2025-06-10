@@ -27,6 +27,9 @@ class GameState:
 
         self.turn = 'w'
         self.moveLog = []
+        self.boardHistory = [self.getBoardString()]  # Track board positions for threefold repetition
+        self.moveCount = 0  # Track moves for fifty-move rule
+        self.lastCaptureOrPawnMove = 0  # Track last capture or pawn move
 
         self.kingLocation = {'w': (7, 4), 'b': (0, 4)}
         self.inCheck = False
@@ -41,10 +44,15 @@ class GameState:
         self.current_castling_rights = CastleRights(True, True, True, True)
         self.castle_rights_log = [CastleRights(True, True, True, True)]
 
+    def getBoardString(self):
+        # Convert current board state to a string for comparison
+        return ''.join([''.join(row) for row in self.board])
+
     def makeMove(self, move):
 
         if move.capturedPiece != '--':
             self.piece_ingame[move.capturedPiece] -= 1
+            self.lastCaptureOrPawnMove = self.moveCount
         if move.isPawnPromotion:
             if self.turn == 'w':
                 self.piece_ingame['wp'] -= 1
@@ -52,6 +60,7 @@ class GameState:
             else:
                 self.piece_ingame['bp'] -= 1
                 self.piece_ingame['bQ'] += 1
+            self.lastCaptureOrPawnMove = self.moveCount
 
         # Edit board
         self.board[move.sqEnd[0]][move.sqEnd[1]] = self.board[move.sqStart[0]][move.sqStart[1]]
@@ -70,11 +79,13 @@ class GameState:
         if move.isEnpassant:
             square_attacked = (move.sqEnd[0] + v_enpassant[move.movePiece[0]], move.sqEnd[1])
             self.board[square_attacked[0]][square_attacked[1]] = "--"
+            self.lastCaptureOrPawnMove = self.moveCount
 
         # Detect en passant
         if move.movePiece[1] == 'p' and abs(move.sqStart[0] - move.sqEnd[0]) == 2:
             des = move.sqEnd
             self.enpassant_possible = ((move.sqStart[0] + move.sqEnd[0]) // 2, (move.sqStart[1] + move.sqEnd[1]) // 2)
+            self.lastCaptureOrPawnMove = self.moveCount
         else:
             self.enpassant_possible = ()
 
@@ -94,12 +105,19 @@ class GameState:
         self.castle_rights_log.append(
             CastleRights(self.current_castling_rights.wks, self.current_castling_rights.bks,
                          self.current_castling_rights.wqs, self.current_castling_rights.bqs))
+        
+        # Update move count and board history
+        self.moveCount += 1
+        self.boardHistory.append(self.getBoardString())
+        
         self.turn = self.rival[self.turn]
         self.moveLog.append(move)
 
     def undoMove(self):
         if self.moveLog:
             move = self.moveLog.pop()
+            self.boardHistory.pop()  # Remove last board state
+            self.moveCount -= 1
 
             self.board[move.sqStart[0]][move.sqStart[1]] = move.movePiece
             self.board[move.sqEnd[0]][move.sqEnd[1]] = move.capturedPiece
@@ -550,6 +568,21 @@ class GameState:
     def getTurn(self):
         s = f"Turn: {self.trans[self.turn]}"
         return s
+
+    def isThreefoldRepetition(self):
+        # Check if current position has occurred three times
+        current_board = self.getBoardString()
+        count = 0
+        for board in reversed(self.boardHistory):
+            if board == current_board:
+                count += 1
+                if count >= 3:
+                    return True
+        return False
+
+    def isFiftyMoveRule(self):
+        # Check if 50 moves have passed without a capture or pawn move
+        return self.moveCount - self.lastCaptureOrPawnMove >= 50
 
 
 class Move:

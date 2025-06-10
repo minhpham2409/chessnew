@@ -18,6 +18,9 @@ class GameInit:
         self.image_white_win = pygame.transform.scale(pygame.image.load('./data/images/white_win.jpg'),
                                                       (2.62 * SQ_SIZE, SQ_SIZE))
         self.image_white_win.set_alpha(200)
+        self.image_draw = pygame.transform.scale(pygame.image.load('./data/images/draw.png'),
+                                                      (2.62 * SQ_SIZE, SQ_SIZE))
+        self.image_draw.set_alpha(200)
 
         self.__loadSound()
 
@@ -124,10 +127,16 @@ class GameInit:
                     self.screen.blit(self.IMAGES[piece], pygame.Rect(j * SQ_SIZE, i * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
     def drawGameOver(self):
-        if self.gs.turn == 'w':
-            self.screen.blit(self.image_black_win, (191, 223))
-        else:
-            self.screen.blit(self.image_white_win, (191, 223))
+        if len(self.validMoves) == 0:
+            if self.gs.inCheck:
+                if self.gs.turn == 'w':
+                    self.screen.blit(self.image_black_win, (191, 223))
+                else:
+                    self.screen.blit(self.image_white_win, (191, 223))
+            else:
+                self.screen.blit(self.image_draw, (191, 223))
+        elif self.gs.isThreefoldRepetition() or self.gs.isFiftyMoveRule():
+            self.screen.blit(self.image_draw, (191, 223))
 
     def highlightSquares(self):
         sqHighlight = []
@@ -148,7 +157,25 @@ class GameInit:
         self.text_box.set_text(self.gs.getMoveNotation())
         self.label_turn.set_text(self.gs.getTurn())
         self.label_possible_move.set_text(f'Possible moves: {len(self.validMoves)}')
-        self.label_incheck.set_text(f'In Check : {self.gs.inCheck}')
+        
+        # Check game state and display appropriate message
+        if len(self.validMoves) == 0:
+            if self.gs.inCheck:
+                self.label_incheck.set_text('Checkmate! ' + ('Black' if self.gs.turn == 'w' else 'White') + ' wins!')
+                self.gameOver = True
+            else:
+                self.label_incheck.set_text('Stalemate! Game is a draw!')
+                self.gameOver = True
+        elif self.gs.isThreefoldRepetition():
+            self.label_incheck.set_text('Draw by threefold repetition!')
+            self.gameOver = True
+        elif self.gs.isFiftyMoveRule():
+            self.label_incheck.set_text('Draw by fifty-move rule!')
+            self.gameOver = True
+        elif self.gs.inCheck:
+            self.label_incheck.set_text('Check!')
+        else:
+            self.label_incheck.set_text('No Check')
 
     def clickUserHandler(self):
         pos = pygame.mouse.get_pos()

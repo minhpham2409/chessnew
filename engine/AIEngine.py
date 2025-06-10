@@ -230,10 +230,27 @@ class AIEngine:
                     self.total_branch_cutoff += 1
                     break
             return minEval
-
     def evaluation(self, gs):
         if self.aiTurn == 'b':
             score = self.getPiecePositionScore(gs) + AIEngine.getMaterialScore(gs)
         else:
             score = - self.getPiecePositionScore(gs) - AIEngine.getMaterialScore(gs)
+
+        # Penalize moves that could lead to threefold repetition
+        if gs.isThreefoldRepetition():
+            if self.aiTurn == 'b':
+                score -= 1000  # Strongly discourage moves leading to repetition
+            else:
+                score += 1000
+
+        # Penalize moves that could lead to fifty-move rule
+        moves_since_last_capture = gs.moveCount - gs.lastCaptureOrPawnMove
+        if moves_since_last_capture > 30:  # Start penalizing when approaching 50 moves
+            penalty = (moves_since_last_capture - 30) * 10  # Increasing penalty as we get closer to 50
+            if self.aiTurn == 'b':
+                score -= penalty
+            else:
+                score += penalty
+
         return score
+
