@@ -67,7 +67,15 @@ class PlayAIMode(GameInit):
 
     def __AIProcess(self):
         if not self.ai_thinking:
-            self.find_move_process = Process(target=self.aiEngine.AlphaBetaPruning,
+            # Use selected algorithm
+            if self.algo_dropdown.selected_option == 'Minimax':
+                self.find_move_process = Process(target=self.aiEngine.MiniMax,
+                                             args=(self.gs, DEPTH, self.q))
+            elif self.algo_dropdown.selected_option == 'Greedy':
+                self.find_move_process = Process(target=self.aiEngine.Greedy,
+                                             args=(self.gs, self.q))
+            else:  # Alpha Beta
+                self.find_move_process = Process(target=self.aiEngine.AlphaBetaPruning,
                                              args=(self.gs, DEPTH, - math.inf, math.inf,
                                                    self.q))
 
@@ -148,6 +156,15 @@ class PlayAIMode(GameInit):
             container=self.ai_panel
         )
 
+        # Add dropdown menu for algorithm selection
+        self.algo_dropdown = pygame_gui.elements.UIDropDownMenu(
+            options_list=['Minimax', 'Alpha Beta', 'Greedy'],
+            starting_option='Alpha Beta',
+            relative_rect=pygame.Rect((LEFT_TURN + 100, TOP_TURN), (WIDTH_LABEL_AI - 100, HEIGHT_LABEL_AI)),
+            manager=self.manager,
+            container=self.ai_panel
+        )
+
         self.label_depth = pygame_gui.elements.UILabel(
             relative_rect=pygame.Rect((LEFT_POSSIBLE_MOVE, TOP_POSSIBLE_MOVE), (WIDTH_LABEL_AI, HEIGHT_LABEL)),
             text='DEPTH: ' + str(DEPTH), manager=self.manager,
@@ -168,7 +185,7 @@ class PlayAIMode(GameInit):
             self.total_nodes_leaf_log.pop()
 
     def editAIPanel(self):
-        self.label_algo.set_text("Algorithm: " + self.aiEngine.algoSearch)
+        self.label_algo.set_text("Algorithm: " + self.algo_dropdown.selected_option)
         self.label_maxScore.set_text("Max Score: " + str(self.aiEngine.maxScore))
 
         self.text_box_ai.set_text(self.__getTextBoxAI())
@@ -189,6 +206,11 @@ class PlayAIMode(GameInit):
 
     @staticmethod
     def __checkEndGame(gs):
+        # Check if only two kings remain
+        total_pieces = sum(gs.piece_ingame.values())
+        if total_pieces == 2:  # Only two kings left
+            return True
+
         if gs.piece_ingame['wQ'] == 0 and gs.piece_ingame['bQ'] == 0:
             return True
         if gs.piece_ingame['wQ'] == 1 and gs.piece_ingame['bQ'] == 1:

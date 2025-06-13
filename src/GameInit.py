@@ -172,6 +172,9 @@ class GameInit:
         elif self.gs.isFiftyMoveRule():
             self.label_incheck.set_text('Draw by fifty-move rule!')
             self.gameOver = True
+        elif sum(self.gs.piece_ingame.values()) == 2:  # Only two kings remain
+            self.label_incheck.set_text('Draw! Only two kings remain!')
+            self.gameOver = True
         elif self.gs.inCheck:
             self.label_incheck.set_text('Check!')
         else:

@@ -254,3 +254,27 @@ class AIEngine:
 
         return score
 
+    def Greedy(self, gs: GameState, returned_queue):
+        """Greedy algorithm that always chooses the move with the highest immediate score"""
+        self.__resetParameter()
+        self.algoSearch = "Greedy"
+        start = time.time()
+        
+        moves = gs.getValidMoves()
+        best_score = -math.inf
+        best_move = None
+        
+        for move in moves:
+            gs.makeMove(move)
+            score = self.evaluation(gs)
+            gs.undoMove()
+            
+            if score > best_score:
+                best_score = score
+                best_move = move
+                self.bestMove = move
+                self.maxScore = score
+        
+        self.executionTime = time.time() - start
+        returned_queue.put(self)
+
