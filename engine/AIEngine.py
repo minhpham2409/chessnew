@@ -252,6 +252,27 @@ class AIEngine:
             else:
                 score += penalty
 
+        # Encourage checkmate moves when in a winning position
+        if abs(score) > 1000:  # If we have a significant advantage
+            # Check if we can deliver check
+            moves = gs.getValidMoves()
+            for move in moves:
+                gs.makeMove(move)
+                if gs.inCheck:
+                    # If this move puts the opponent in check, give it a bonus
+                    if self.aiTurn == 'b':
+                        score += 1000  # Bonus for checking moves
+                    else:
+                        score -= 1000
+                gs.undoMove()
+
+            # Extra bonus for moves that reduce opponent's mobility
+            opponent_moves = len(gs.getValidMoves())
+            if self.aiTurn == 'b':
+                score += (30 - opponent_moves) * 10  # Bonus for restricting opponent's moves
+            else:
+                score -= (30 - opponent_moves) * 10
+
         return score
 
     def Greedy(self, gs: GameState, returned_queue):

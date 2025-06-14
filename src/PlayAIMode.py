@@ -185,7 +185,7 @@ class PlayAIMode(GameInit):
             self.total_nodes_leaf_log.pop()
 
     def editAIPanel(self):
-        self.label_algo.set_text("Algorithm: " + self.algo_dropdown.selected_option)
+        self.label_algo.set_text(" " + self.algo_dropdown.selected_option)
         self.label_maxScore.set_text("Max Score: " + str(self.aiEngine.maxScore))
 
         self.text_box_ai.set_text(self.__getTextBoxAI())

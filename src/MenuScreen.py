@@ -23,7 +23,7 @@ class MenuScreen:
                                      title_font_size=24
                                      )
 
-        self.menu = pygame_menu.Menu('Chess game - Group 1', 300, 300,
+        self.menu = pygame_menu.Menu('Chess game ', 300, 300,
                                      theme=my_theme)
         self.menu.add.button("Play", button_id='PvP')
         self.menu.add.button("Play with AI", button_id='PvC')
